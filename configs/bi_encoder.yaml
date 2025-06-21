@@ -1,0 +1,31 @@
+# Bi-encoder retriever configuration.
+data:
+  locale: us
+  raw_dir: data/raw
+  processed_dir: data/processed
+  max_query_len: 32
+  max_product_len: 128
+  use_small_version: true
+
+bi_encoder:
+  model_name: sentence-transformers/all-MiniLM-L6-v2
+  pooling: mean
+  embedding_dim: 384
+  normalize: true
+  max_seq_len: 128
+  temperature: 0.05
+  batch_size: 64
+  epochs: 3
+  lr: 2.0e-5
+  warmup_ratio: 0.1
+  num_hard_negatives: 4
+  retrieval_top_k: 100
+
+train:
+  seed: 42
+  output_dir: artifacts/bi_encoder
+  fp16: true
+  grad_accum_steps: 1
+  eval_every: 1
+  early_stopping_patience: 2
+  num_workers: 4

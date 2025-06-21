@@ -1,0 +1,24 @@
+# End-to-end two-stage pipeline configuration (retrieve -> rerank -> evaluate).
+data:
+  locale: us
+  raw_dir: data/raw
+  processed_dir: data/processed
+  use_small_version: true
+
+bi_encoder:
+  model_name: sentence-transformers/all-MiniLM-L6-v2
+  pooling: mean
+  embedding_dim: 384
+  normalize: true
+  max_seq_len: 128
+  retrieval_top_k: 100
+
+cross_encoder:
+  model_name: microsoft/deberta-v3-base
+  num_labels: 4
+  max_seq_len: 192
+  rerank_top_k: 100
+
+train:
+  seed: 42
+  output_dir: artifacts

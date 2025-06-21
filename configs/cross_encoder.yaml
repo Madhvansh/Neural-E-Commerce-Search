@@ -1,0 +1,30 @@
+# DeBERTa cross-encoder reranker configuration.
+data:
+  locale: us
+  raw_dir: data/raw
+  processed_dir: data/processed
+  max_query_len: 32
+  max_product_len: 128
+  use_small_version: true
+
+cross_encoder:
+  model_name: microsoft/deberta-v3-base
+  num_labels: 4
+  max_seq_len: 192
+  batch_size: 32
+  epochs: 2
+  lr: 1.0e-5
+  warmup_ratio: 0.06
+  weight_decay: 0.01
+  # Order matches ESCI_LABELS = (E, S, C, I); rarer classes get more weight.
+  class_weights: [1.0, 2.0, 4.0, 1.5]
+  rerank_top_k: 100
+
+train:
+  seed: 42
+  output_dir: artifacts/cross_encoder
+  fp16: true
+  grad_accum_steps: 2
+  eval_every: 1
+  early_stopping_patience: 2
+  num_workers: 4
