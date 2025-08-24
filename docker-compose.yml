@@ -1,0 +1,20 @@
+services:
+  search-api:
+    build: .
+    image: necs-search:latest
+    ports:
+      - "8000:8000"
+    environment:
+      NECS_RETRIEVER: /app/artifacts/bi_encoder
+      NECS_RERANKER: /app/artifacts/cross_encoder
+      NECS_INDEX: /app/artifacts/product_index
+      NECS_CATALOGUE: /app/artifacts/catalogue.json
+    volumes:
+      # Mount trained artifacts produced by the training scripts.
+      - ./artifacts:/app/artifacts:ro
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
