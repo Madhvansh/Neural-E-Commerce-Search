@@ -10,7 +10,7 @@ from __future__ import annotations
 import copy
 from dataclasses import dataclass, field, fields, is_dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, get_type_hints
 
 import yaml
 
@@ -77,14 +77,20 @@ class Config:
 
 
 def _from_dict(cls: type, data: dict[str, Any]) -> Any:
-    """Recursively build a dataclass from a (partial) dict."""
+    """Recursively build a dataclass from a (partial) dict.
+
+    ``from __future__ import annotations`` turns field types into strings, so we
+    resolve them with :func:`get_type_hints` to detect nested dataclasses.
+    """
+    hints = get_type_hints(cls)
     kwargs: dict[str, Any] = {}
     for f in fields(cls):
         if f.name not in data:
             continue
         value = data[f.name]
-        if is_dataclass(f.type) and isinstance(value, dict):
-            kwargs[f.name] = _from_dict(f.type, value)
+        field_type = hints.get(f.name, f.type)
+        if is_dataclass(field_type) and isinstance(value, dict):
+            kwargs[f.name] = _from_dict(field_type, value)
         else:
             kwargs[f.name] = value
     return cls(**kwargs)
