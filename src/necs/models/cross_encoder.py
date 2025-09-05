@@ -35,7 +35,7 @@ class CrossEncoder(nn.Module):
         self.register_buffer("relevance_weights", _RELEVANCE_WEIGHTS[:num_labels])
 
     def forward(self, **inputs) -> torch.Tensor:
-        labels = inputs.pop("labels", None)  # loss handled by the trainer
+        inputs.pop("labels", None)  # loss is handled by the trainer, not the model
         return self.model(**inputs).logits
 
     @torch.no_grad()

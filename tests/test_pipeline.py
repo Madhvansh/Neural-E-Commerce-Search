@@ -8,8 +8,8 @@ heavyweight models.
 
 import numpy as np
 
-from necs.retrieval.index import SearchHit
 from necs.pipeline.search import TwoStageSearcher
+from necs.retrieval.index import SearchHit
 
 
 class _FakeTensor:

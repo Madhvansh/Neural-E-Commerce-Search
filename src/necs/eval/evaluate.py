@@ -72,7 +72,8 @@ def summarize(name: str, ranking: dict, classification: dict | None = None) -> s
     """Human-readable one-block summary for logs / reports."""
     lines = [f"=== {name} ==="]
     for key, value in ranking.items():
-        lines.append(f"  {key:<14} {value:.4f}" if isinstance(value, float) else f"  {key:<14} {value}")
+        formatted = f"{value:.4f}" if isinstance(value, float) else str(value)
+        lines.append(f"  {key:<14} {formatted}")
     if classification:
         lines.append(f"  micro_f1       {classification['micro_f1']:.4f}")
         lines.append(f"  macro_f1       {classification['macro_f1']:.4f}")

@@ -16,7 +16,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from necs import ESCI_LABELS, ESCI_LABEL_NAMES
+from necs import ESCI_LABEL_NAMES, ESCI_LABELS
 
 
 @dataclass
