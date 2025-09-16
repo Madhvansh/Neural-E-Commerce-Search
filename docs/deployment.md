@@ -90,6 +90,31 @@ curl -s localhost:8000/search \
 
 Interactive docs are served at `http://localhost:8000/docs` (Swagger UI).
 
+## Hosting a live demo
+
+The service is a standard containerized web app, so any Docker host works. The
+one hard requirement is that **trained artifacts must be available to the
+container** (baked into the image or on a mounted disk) — otherwise `/search`
+returns `503` and `/health` reports `model_loaded: false`.
+
+* **Render** — a [`render.yaml`](../render.yaml) blueprint is included. Point
+  Render at the repo, attach a persistent disk at `/app/artifacts`, upload the
+  artifacts, and it deploys on every push with a `/health` health check.
+* **Hugging Face Spaces (Docker SDK)** — push this repo as a Space; store the
+  trained models in the Space repo or pull them from the Hub at startup.
+* **Railway / Fly.io / Cloud Run** — build from the `Dockerfile`; provide the
+  artifacts via a volume or object storage synced on boot.
+
+> A public live endpoint is intentionally **not** committed here because it
+> requires GPU-trained artifacts and a paid host; the blueprint above makes
+> standing one up a one-step operation once you have trained models.
+
+## Documentation site
+
+Project documentation is published with **GitHub Pages** from the `docs/`
+folder. Once enabled (Settings → Pages → Source: `main` / `/docs`), it is served
+at `https://madhvansh.github.io/Neural-E-Commerce-Search/`.
+
 ## Scaling notes
 
 * **Index** — `IndexFlatIP` is exact but linear in catalogue size. For millions

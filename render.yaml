@@ -1,0 +1,28 @@
+# Render.com blueprint for a one-click deploy of the search API.
+# Docs: https://render.com/docs/blueprint-spec
+#
+# Prerequisite: the image must contain trained artifacts (retriever, reranker,
+# FAISS index, catalogue.json) under /app/artifacts — either baked into the
+# Docker build or mounted from a persistent disk. Without them the service boots
+# but /search returns 503 and /health reports model_loaded: false.
+services:
+  - type: web
+    name: necs-search
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NECS_RETRIEVER
+        value: /app/artifacts/bi_encoder
+      - key: NECS_RERANKER
+        value: /app/artifacts/cross_encoder
+      - key: NECS_INDEX
+        value: /app/artifacts/product_index
+      - key: NECS_CATALOGUE
+        value: /app/artifacts/catalogue.json
+    disk:
+      name: artifacts
+      mountPath: /app/artifacts
+      sizeGB: 5

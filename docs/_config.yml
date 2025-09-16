@@ -1,0 +1,7 @@
+title: Neural E-Commerce Search
+description: >-
+  Two-stage retrieve-and-rank neural product search on the Amazon ESCI
+  Shopping Queries dataset — a dense bi-encoder retriever with hard-negative
+  mining and a DeBERTa cross-encoder reranker.
+theme: jekyll-theme-cayman
+show_downloads: true
