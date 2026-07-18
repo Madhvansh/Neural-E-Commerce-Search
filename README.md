@@ -102,10 +102,10 @@ output or `--catalog path/to/catalog.json` with the documented sample schema.
 
 ## Validate retrieval evidence in CI
 
-The v0.3.0 release also ships a standalone TREC qrels/run integrity check. It
-catches missing queries, duplicate or non-contiguous ranks, unjudged documents,
-malformed values, and optional task-header mismatches before a metric script can
-silently produce a misleading aggregate.
+The v0.3.0 release also ships a standalone TREC-style structural preflight. It
+fails on malformed values and duplicate query/document pairs, reports query
+coverage, advisory-rank, and unjudged-document diagnostics, and checks optional
+task headers before a metric script can silently produce a misleading aggregate.
 
 ```bash
 necs-validate \
@@ -125,7 +125,7 @@ Use it directly from another repository's workflow:
 
 See [the validator guide](docs/validation.md) for formats, JSON output, strictness
 flags, and the exact evidence boundary. Public downstream uses and caught
-failures are welcome in [the adoption issue](https://github.com/Madhvansh/Neural-E-Commerce-Search/issues/8).
+failures are welcome through the [validator compatibility report](https://github.com/Madhvansh/Neural-E-Commerce-Search/issues/new?template=validator_report.yml).
 
 ## What the full system implements
 

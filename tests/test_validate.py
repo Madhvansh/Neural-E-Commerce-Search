@@ -36,7 +36,13 @@ def test_integrity_errors_are_reported_together(tmp_path):
         "1 Q0 d1 1 1.0 run\n1 Q0 d1 2 0.9 run\n1 Q0 unknown 3 0.8 run\n3 Q0 d3 1 0.7 run\n",
     )
 
-    report = validate_files(qrels, run)
+    report = validate_files(
+        qrels,
+        run,
+        require_query_coverage=True,
+        require_judged=True,
+        strict_ranks=True,
+    )
     codes = {issue.code for issue in report.errors}
 
     assert not report.ok
@@ -47,22 +53,67 @@ def test_integrity_errors_are_reported_together(tmp_path):
     assert "non_contiguous_ranks" in codes
 
 
-def test_allow_flags_downgrade_coverage_issues(tmp_path):
+def test_default_coverage_and_unjudged_conditions_are_warnings(tmp_path):
     qrels = _write(tmp_path / "qrels.txt", "1 0 d1 3\n2 0 d2 1\n")
     run = _write(tmp_path / "run.txt", "1 Q0 unjudged 1 1.0 run\n")
 
-    report = validate_files(
-        qrels,
-        run,
-        allow_missing_queries=True,
-        allow_unjudged=True,
-    )
+    report = validate_files(qrels, run)
 
     assert report.ok
     assert {issue.code for issue in report.warnings} == {
         "missing_query",
         "unjudged_document",
     }
+
+
+def test_zero_based_pyterrier_ranks_pass_without_rank_warnings(tmp_path):
+    qrels = _write(tmp_path / "qrels.txt", "1 0 d1 3\n1 0 d2 1\n")
+    run = _write(
+        tmp_path / "run.txt",
+        "1 Q0 d1 0 1.0 run\n1 Q0 d2 1 0.5 run\n",
+    )
+
+    report = validate_files(qrels, run)
+
+    assert report.ok
+    assert not report.warnings
+
+
+def test_rank_anomalies_warn_by_default_and_fail_in_strict_mode(tmp_path):
+    qrels = _write(tmp_path / "qrels.txt", "1 0 d1 3\n1 0 d2 1\n1 0 d3 0\n")
+    run = _write(
+        tmp_path / "run.txt",
+        "1 Q0 d1 2 1.0 run\n1 Q0 d2 0 0.5 run\n1 Q0 d3 2 0.1 run\n",
+    )
+
+    report = validate_files(qrels, run)
+    strict_report = validate_files(qrels, run, strict_ranks=True)
+    expected_codes = {
+        "duplicate_rank",
+        "non_contiguous_ranks",
+        "out_of_order_ranks",
+    }
+
+    assert report.ok
+    assert report.run_entries == 3
+    assert {issue.code for issue in report.warnings} == expected_codes
+    assert {issue.code for issue in strict_report.errors} == expected_codes
+
+
+def test_query_coverage_warns_by_default_and_can_be_required(tmp_path):
+    qrels = _write(tmp_path / "qrels.txt", "1 0 d1 3\n2 0 d2 1\n")
+    run = _write(
+        tmp_path / "run.txt",
+        "1 Q0 d1 1 1.0 run\n3 Q0 d3 1 0.5 run\n",
+    )
+
+    report = validate_files(qrels, run)
+    strict_report = validate_files(qrels, run, require_query_coverage=True)
+    expected_codes = {"missing_query", "unknown_query"}
+
+    assert report.ok
+    assert expected_codes <= {issue.code for issue in report.warnings}
+    assert expected_codes <= {issue.code for issue in strict_report.errors}
 
 
 def test_task_mismatch_is_an_error(tmp_path):
@@ -96,3 +147,16 @@ def test_cli_json_and_exit_code(tmp_path, capsys):
     assert exit_code == 0
     assert payload["ok"] is True
     assert payload["counts"]["run_entries"] == 1
+
+
+def test_cli_require_judged_turns_warning_into_failure(tmp_path, capsys):
+    qrels = _write(tmp_path / "qrels.txt", "1 0 d1 3\n")
+    run = _write(tmp_path / "run.txt", "1 Q0 other 1 1 run\n")
+
+    exit_code = run_cli(
+        ["--qrels", str(qrels), "--run", str(run), "--require-judged"]
+    )
+    output = capsys.readouterr().out
+
+    assert exit_code == 1
+    assert "unjudged_document" in output

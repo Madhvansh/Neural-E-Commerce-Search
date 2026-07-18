@@ -8,11 +8,12 @@ All notable project changes should be recorded here. The format follows
 
 ### Added
 
-- `necs-validate`, a dependency-light integrity checker for TREC-style qrels
+- `necs-validate`, a dependency-light structural preflight for TREC-style qrels
   and run files with text and JSON reports.
-- A reusable GitHub Action that fails CI on missing queries, duplicate or
-  non-contiguous ranks, unjudged documents, malformed values, and optional task
-  metadata mismatches.
+- A reusable GitHub Action that fails CI on malformed rows, duplicate returned
+  documents, and optional task metadata mismatches. Standards-compatible query
+  coverage, advisory-rank, and unjudged-document diagnostics warn by default and
+  each has an explicit strict mode.
 - Sample evaluation files and focused validator documentation.
 - Runtime validation and a published JSON Schema for remix catalogues.
 - A copyable browser-result report for low-friction independent feedback.

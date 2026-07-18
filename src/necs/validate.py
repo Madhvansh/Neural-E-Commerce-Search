@@ -1,4 +1,4 @@
-"""Validate TREC-style qrels and retrieval runs before computing metrics.
+"""Run a TREC-style structural preflight before computing retrieval metrics.
 
 The validator is intentionally dependency-light so it can run in a clean CI
 environment.  It checks structural integrity and evaluation coverage; it does
@@ -12,6 +12,7 @@ import argparse
 import json
 import math
 import re
+from collections import Counter
 from collections.abc import Iterable
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
@@ -217,20 +218,19 @@ def parse_run(path: str | Path, issues: list[ValidationIssue] | None = None) -> 
     rows, metadata = _data_lines(run_path, 6, "run", issue_list)
     parsed = ParsedRun(metadata=metadata)
     seen_documents: set[tuple[str, str]] = set()
-    seen_ranks: set[tuple[str, int]] = set()
 
     for line_number, columns in rows:
         query_id, _iteration, document_id, raw_rank, raw_score, _run_tag = columns
         try:
             rank = int(raw_rank)
-            if rank < 1:
+            if rank < 0:
                 raise ValueError
         except ValueError:
             issue_list.append(
                 ValidationIssue(
                     "error",
                     "invalid_rank",
-                    f"Rank must be a positive integer, found {raw_rank!r}",
+                    f"Rank must be a non-negative integer, found {raw_rank!r}",
                     file=str(run_path),
                     line=line_number,
                     query_id=query_id,
@@ -272,22 +272,6 @@ def parse_run(path: str | Path, issues: list[ValidationIssue] | None = None) -> 
             )
             continue
         seen_documents.add(document_key)
-
-        rank_key = (query_id, rank)
-        if rank_key in seen_ranks:
-            issue_list.append(
-                ValidationIssue(
-                    "error",
-                    "duplicate_rank",
-                    f"Rank {rank} appears more than once for this query",
-                    file=str(run_path),
-                    line=line_number,
-                    query_id=query_id,
-                    document_id=document_id,
-                )
-            )
-            continue
-        seen_ranks.add(rank_key)
         parsed.entries.setdefault(query_id, []).append((document_id, rank, score))
 
     if not rows:
@@ -307,48 +291,37 @@ def _add_coverage_issues(
     run: ParsedRun,
     issues: list[ValidationIssue],
     *,
-    allow_missing_queries: bool,
-    allow_unjudged: bool,
+    require_query_coverage: bool,
+    require_judged: bool,
 ) -> None:
     qrels_queries = set(qrels.judgements)
     run_queries = set(run.entries)
+    coverage_severity = "error" if require_query_coverage else "warning"
 
     for query_id in sorted(run_queries - qrels_queries):
         issues.append(
             ValidationIssue(
-                "error",
+                coverage_severity,
                 "unknown_query",
-                "Run contains a query that is absent from qrels",
+                "Run query is absent from qrels and is ignored by common evaluators",
                 query_id=query_id,
             )
         )
 
-    missing_severity = "warning" if allow_missing_queries else "error"
     for query_id in sorted(qrels_queries - run_queries):
         issues.append(
             ValidationIssue(
-                missing_severity,
+                coverage_severity,
                 "missing_query",
-                "Qrels query has no run entries and would otherwise disappear from an average",
+                "Qrels query has no run entries and should receive a zero score",
                 query_id=query_id,
             )
         )
 
-    unjudged_severity = "warning" if allow_unjudged else "error"
+    unjudged_severity = "error" if require_judged else "warning"
     for query_id in sorted(qrels_queries & run_queries):
         judged_documents = qrels.judgements[query_id]
         entries = run.entries[query_id]
-        ranks = sorted(rank for _document_id, rank, _score in entries)
-        expected_ranks = list(range(1, len(ranks) + 1))
-        if ranks != expected_ranks:
-            issues.append(
-                ValidationIssue(
-                    "error",
-                    "non_contiguous_ranks",
-                    f"Ranks must be contiguous from 1; found {ranks}",
-                    query_id=query_id,
-                )
-            )
         for document_id, _rank, _score in entries:
             if document_id not in judged_documents:
                 issues.append(
@@ -360,6 +333,71 @@ def _add_coverage_issues(
                         document_id=document_id,
                     )
                 )
+
+
+def _add_rank_issues(
+    run: ParsedRun,
+    issues: list[ValidationIssue],
+    *,
+    strict_ranks: bool,
+) -> None:
+    """Report advisory rank-column anomalies without discarding run entries.
+
+    Common evaluators order a TREC run by score rather than trusting the
+    submitted rank column, and PyTerrier uses a zero-based rank. The diagnostics
+    remain useful for catching accidental exports, but are warnings unless the
+    caller explicitly requests strict rank formatting.
+    """
+
+    severity = "error" if strict_ranks else "warning"
+    for query_id, entries in run.entries.items():
+        ranks = [rank for _document_id, rank, _score in entries]
+        if not ranks:
+            continue
+
+        duplicate_ranks = sorted(rank for rank, count in Counter(ranks).items() if count > 1)
+        for rank in duplicate_ranks:
+            issues.append(
+                ValidationIssue(
+                    severity,
+                    "duplicate_rank",
+                    f"Advisory rank {rank} appears more than once for this query",
+                    query_id=query_id,
+                )
+            )
+
+        rank_base = min(ranks)
+        if rank_base not in (0, 1):
+            issues.append(
+                ValidationIssue(
+                    severity,
+                    "unusual_rank_base",
+                    f"Advisory ranks normally begin at 0 or 1; found {rank_base}",
+                    query_id=query_id,
+                )
+            )
+        else:
+            unique_ranks = sorted(set(ranks))
+            expected_ranks = list(range(rank_base, rank_base + len(unique_ranks)))
+            if unique_ranks != expected_ranks:
+                issues.append(
+                    ValidationIssue(
+                        severity,
+                        "non_contiguous_ranks",
+                        f"Advisory ranks contain gaps; found {unique_ranks}",
+                        query_id=query_id,
+                    )
+                )
+
+        if ranks != sorted(ranks):
+            issues.append(
+                ValidationIssue(
+                    severity,
+                    "out_of_order_ranks",
+                    f"Advisory ranks are not in ascending file order; found {ranks}",
+                    query_id=query_id,
+                )
+            )
 
 
 def _add_task_issues(
@@ -405,8 +443,9 @@ def validate_files(
     qrels_path: str | Path,
     run_path: str | Path,
     *,
-    allow_missing_queries: bool = False,
-    allow_unjudged: bool = False,
+    require_query_coverage: bool = False,
+    require_judged: bool = False,
+    strict_ranks: bool = False,
     expected_task: str | None = None,
 ) -> ValidationReport:
     """Validate two TREC-style files and return a complete report."""
@@ -418,9 +457,10 @@ def validate_files(
         qrels,
         run,
         issues,
-        allow_missing_queries=allow_missing_queries,
-        allow_unjudged=allow_unjudged,
+        require_query_coverage=require_query_coverage,
+        require_judged=require_judged,
     )
+    _add_rank_issues(run, issues, strict_ranks=strict_ranks)
     _add_task_issues(qrels, run, issues, expected_task)
 
     return ValidationReport(
@@ -466,17 +506,22 @@ def format_text(report: ValidationReport) -> str:
 
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--qrels", required=True, help="TREC qrels file")
-    parser.add_argument("--run", required=True, help="TREC run file")
+    parser.add_argument("--qrels", required=True, help="TREC-style qrels file")
+    parser.add_argument("--run", required=True, help="TREC-style run file")
     parser.add_argument(
-        "--allow-missing-queries",
+        "--require-query-coverage",
         action="store_true",
-        help="report qrels queries missing from the run as warnings instead of errors",
+        help="fail when qrels and run query sets differ (default: warning)",
     )
     parser.add_argument(
-        "--allow-unjudged",
+        "--require-judged",
         action="store_true",
-        help="report run documents absent from qrels as warnings instead of errors",
+        help="fail when a run document is absent from qrels (default: warning)",
+    )
+    parser.add_argument(
+        "--strict-ranks",
+        action="store_true",
+        help="fail on advisory rank-column anomalies (default: warning)",
     )
     parser.add_argument(
         "--expected-task",
@@ -496,8 +541,9 @@ def run_cli(argv: Iterable[str] | None = None) -> int:
     report = validate_files(
         args.qrels,
         args.run,
-        allow_missing_queries=args.allow_missing_queries,
-        allow_unjudged=args.allow_unjudged,
+        require_query_coverage=args.require_query_coverage,
+        require_judged=args.require_judged,
+        strict_ranks=args.strict_ranks,
         expected_task=args.expected_task,
     )
     if args.format == "json":

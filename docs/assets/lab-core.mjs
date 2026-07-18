@@ -17,6 +17,7 @@ export function validateCatalog(catalog) {
 
   const seenIds = new Set();
   const textFields = ["id", "title", "category", "description"];
+  const allowedFields = new Set([...textFields, "tags"]);
   catalog.forEach((product, index) => {
     if (!product || typeof product !== "object" || Array.isArray(product)) {
       throw new Error(`Catalogue item ${index + 1} must be an object`);
@@ -25,6 +26,12 @@ export function validateCatalog(catalog) {
       if (typeof product[field] !== "string" || !product[field].trim()) {
         throw new Error(`Catalogue item ${index + 1} needs a non-empty ${field} string`);
       }
+    }
+    const extraFields = Object.keys(product).filter((field) => !allowedFields.has(field));
+    if (extraFields.length > 0) {
+      throw new Error(
+        `Catalogue item ${index + 1} has unsupported field(s): ${extraFields.join(", ")}`,
+      );
     }
     if (seenIds.has(product.id)) {
       throw new Error(`Catalogue id ${product.id} appears more than once`);

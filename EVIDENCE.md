@@ -9,9 +9,9 @@ repository demonstrates today from what remains research work.
 |---|---|---|
 | Browser lab | Real client-side `all-MiniLM-L6-v2` embeddings at revision `751bff3` over a synthetic catalogue | The inspectable neural-retrieval interaction works without an account or project-side query logging |
 | Offline demo | Deterministic, dependency-light heuristic ranking over bundled synthetic data | The package, CLI, custom-catalogue schema, and result contract work |
-| Lightweight suite | 63 lightweight Python tests pass locally on Windows/Python 3.12; model-heavy optional paths are outside this count | Task-column mapping, evaluator edge cases, run integrity, mining-checkpoint selection, configuration, and demo behavior are regression-tested |
+| Lightweight suite | 67 lightweight Python tests pass locally on Windows/Python 3.12; model-heavy optional paths are outside this count | Task-column mapping, evaluator edge cases, run integrity, mining-checkpoint selection, configuration, and demo behavior are regression-tested |
 | Distribution | Package CI builds the wheel and source archive, installs the wheel in a fresh environment, and invokes both packaged CLIs | The release candidate is checked independently of the source tree |
-| Run validator | `necs-validate` and the root GitHub Action check TREC qrels/run integrity without model dependencies | Evaluation files can be checked for structural and coverage failures before metrics are computed |
+| Run validator | `necs-validate` and the root GitHub Action preflight TREC-style qrels/run files without model dependencies | Evaluation files can be checked for structural errors and standards-aware coverage/rank diagnostics before metrics are computed |
 | Learned ESCI results | No current public benchmark claim | A corrected clean training run and complete result bundle are still required |
 
 The browser lab is intentionally not described as an ESCI benchmark or as the

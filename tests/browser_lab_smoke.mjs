@@ -46,6 +46,20 @@ assert.throws(
     ]),
   /array of tag strings/,
 );
+assert.throws(
+  () =>
+    validateCatalog([
+      {
+        id: "mouse",
+        title: "Mouse",
+        category: "Input",
+        description: "First",
+        tags: ["mouse"],
+        price: 20,
+      },
+    ]),
+  /unsupported field.*price/,
+);
 
 const html = await readFile(new URL("../docs/lab.html", import.meta.url), "utf8");
 const labScript = await readFile(new URL("../docs/assets/lab.js", import.meta.url), "utf8");
