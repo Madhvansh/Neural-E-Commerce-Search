@@ -1,14 +1,8 @@
-"""Loader for the Amazon ESCI Shopping Queries dataset.
+"""Load the official task-specific Amazon ESCI datasets.
 
-The public dataset (``amazon-science/esci-data``) ships three parquet files:
-
-* ``shopping_queries_dataset_examples.parquet`` — (query, product, label) rows
-* ``shopping_queries_dataset_products.parquet`` — product catalogue
-* ``shopping_queries_dataset_sources.parquet``  — query provenance
-
-We join examples against the catalogue, restrict to a locale, and expose the
-official ``small_version`` train/test split. ESCI labels are
-``esci_label ∈ {E, S, C, I}`` (Exact, Substitute, Complement, Irrelevant).
+Task 1 ranking uses rows flagged by the small_version column. Task 2 multiclass
+classification uses rows flagged by large_version. The protocols remain
+separate so ranking and classification metrics cannot silently mix populations.
 """
 
 from __future__ import annotations
@@ -23,18 +17,31 @@ logger = get_logger(__name__)
 
 _EXAMPLES_FILE = "shopping_queries_dataset_examples.parquet"
 _PRODUCTS_FILE = "shopping_queries_dataset_products.parquet"
+_TASK_VERSION_COLUMNS = {
+    "task1_ranking": "small_version",
+    "task2_classification": "large_version",
+}
+
+
+def version_column_for_task(task: str) -> str:
+    """Return the official dataset membership column for an ESCI task."""
+    try:
+        return _TASK_VERSION_COLUMNS[task]
+    except KeyError as exc:
+        choices = ", ".join(sorted(_TASK_VERSION_COLUMNS))
+        raise ValueError(f"Unknown ESCI task {task!r}; choose one of: {choices}") from exc
 
 
 @dataclass(frozen=True)
 class ESCIExample:
-    """A single (query, product, label) judgement."""
+    """A single query-product judgement."""
 
     query_id: int
     query: str
     product_id: str
     product_text: str
-    label: str  # one of E / S / C / I
-    split: str  # "train" or "test"
+    label: str
+    split: str
 
     def __post_init__(self) -> None:
         if self.label not in ("E", "S", "C", "I"):
@@ -50,19 +57,19 @@ def _read_parquet(path: Path):
 def load_esci(
     raw_dir: str | Path,
     locale: str = "us",
-    use_small_version: bool = True,
+    task: str = "task1_ranking",
 ) -> list[ESCIExample]:
-    """Load and join ESCI examples with their product metadata.
+    """Load and join ESCI examples for one explicit official task.
 
     Parameters
     ----------
     raw_dir:
-        Directory containing the three ESCI parquet files.
+        Directory containing the ESCI parquet files.
     locale:
-        Product locale to keep (``us``, ``es``, or ``jp``).
-    use_small_version:
-        If ``True``, keep only rows flagged with ``small_version == 1``
-        (the reduced product set used for the public benchmark).
+        Product locale to keep: us, es, or jp.
+    task:
+        task1_ranking filters small_version. task2_classification filters
+        large_version.
     """
     raw_dir = Path(raw_dir)
     examples = _read_parquet(raw_dir / _EXAMPLES_FILE)
@@ -70,8 +77,13 @@ def load_esci(
 
     examples = examples[examples["product_locale"] == locale]
     products = products[products["product_locale"] == locale]
-    if use_small_version and "small_version" in examples.columns:
-        examples = examples[examples["small_version"] == 1]
+
+    version_column = version_column_for_task(task)
+    if version_column not in examples.columns:
+        raise ValueError(
+            f"ESCI examples are missing required {version_column!r} column for {task}"
+        )
+    examples = examples[examples[version_column] == 1]
 
     merged = examples.merge(
         products,
@@ -79,11 +91,16 @@ def load_esci(
         how="inner",
         validate="many_to_one",
     )
-    logger.info("Loaded %d ESCI examples (locale=%s)", len(merged), locale)
+    logger.info(
+        "Loaded %d ESCI examples (locale=%s, task=%s)",
+        len(merged),
+        locale,
+        task,
+    )
 
-    out: list[ESCIExample] = []
+    output: list[ESCIExample] = []
     for row in merged.itertuples(index=False):
-        out.append(
+        output.append(
             ESCIExample(
                 query_id=int(row.query_id),
                 query=normalize_text(row.query),
@@ -99,14 +116,14 @@ def load_esci(
                 split=str(row.split),
             )
         )
-    return out
+    return output
 
 
 def train_test_split(
     examples: list[ESCIExample],
 ) -> tuple[list[ESCIExample], list[ESCIExample]]:
-    """Split on the dataset's official ``split`` column."""
-    train = [e for e in examples if e.split == "train"]
-    test = [e for e in examples if e.split == "test"]
+    """Split on the dataset's official split column."""
+    train = [example for example in examples if example.split == "train"]
+    test = [example for example in examples if example.split == "test"]
     logger.info("Split: %d train / %d test", len(train), len(test))
     return train, test

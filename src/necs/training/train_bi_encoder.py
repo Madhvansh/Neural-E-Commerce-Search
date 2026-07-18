@@ -35,17 +35,18 @@ def _build_scheduler(optimizer, num_steps: int, warmup_ratio: float):
 def train_bi_encoder(
     config: Config,
     hard_negatives: dict[int, list[str]] | None = None,
+    init_from: str | None = None,
+    output_dir: str | Path | None = None,
 ) -> BiEncoder:
     seed_everything(config.train.seed)
     device = "cuda" if torch.cuda.is_available() else "cpu"
     cfg = config.bi_encoder
 
-    examples = load_esci(
-        config.data.raw_dir, config.data.locale, config.data.use_small_version
-    )
+    examples = load_esci(config.data.raw_dir, config.data.locale, config.data.task)
     train_ex, _ = train_test_split(examples)
 
-    model = BiEncoder(cfg.model_name, cfg.pooling, cfg.normalize).to(device)
+    model_source = init_from or cfg.model_name
+    model = BiEncoder(model_source, cfg.pooling, cfg.normalize).to(device)
     dataset = BiEncoderDataset(train_ex, hard_negatives, cfg.num_hard_negatives)
     collate = make_retriever_collate(model.tokenizer, cfg.max_seq_len)
     loader = DataLoader(
@@ -81,11 +82,18 @@ def train_bi_encoder(
                 logger.info("epoch %d step %d loss %.4f", epoch, step, loss.item())
         logger.info("epoch %d mean loss %.4f", epoch, running / max(len(loader), 1))
 
-    out = Path(config.train.output_dir)
+    out = Path(output_dir or config.train.output_dir)
     out.mkdir(parents=True, exist_ok=True)
     model.save(str(out))
     (out / "bi_encoder_meta.json").write_text(
-        json.dumps({"model_name": cfg.model_name, "pooling": cfg.pooling}, indent=2)
+        json.dumps(
+            {
+                "base_model_name": cfg.model_name,
+                "initialized_from": init_from,
+                "pooling": cfg.pooling,
+            },
+            indent=2,
+        )
     )
     logger.info("Saved retriever to %s", out)
     return model
@@ -95,6 +103,16 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", default="configs/bi_encoder.yaml")
     parser.add_argument("--hard-negatives", default=None, help="mined negatives JSON")
+    parser.add_argument(
+        "--init-from",
+        default=None,
+        help="checkpoint used to initialize this training pass",
+    )
+    parser.add_argument(
+        "--output-dir",
+        default=None,
+        help="override the configured checkpoint output directory",
+    )
     args = parser.parse_args()
 
     config = load_config(args.config)
@@ -103,7 +121,12 @@ def main() -> None:
         raw = json.loads(Path(args.hard_negatives).read_text())
         negatives = {int(k): v for k, v in raw.items()}
         logger.info("Loaded hard negatives for %d queries", len(negatives))
-    train_bi_encoder(config, negatives)
+    train_bi_encoder(
+        config,
+        negatives,
+        init_from=args.init_from,
+        output_dir=args.output_dir,
+    )
 
 
 if __name__ == "__main__":

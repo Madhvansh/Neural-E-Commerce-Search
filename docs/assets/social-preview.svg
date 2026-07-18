@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" role="img" aria-labelledby="title desc">
+  <title id="title">Neural E-Commerce Search</title>
+  <desc id="desc">An inspectable retrieve and rank product search reference with a browser lab.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#07111f"/>
+      <stop offset="0.55" stop-color="#0b2034"/>
+      <stop offset="1" stop-color="#071421"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#58e6d9"/>
+      <stop offset="0.6" stop-color="#70a7ff"/>
+      <stop offset="1" stop-color="#b7a9ff"/>
+    </linearGradient>
+    <radialGradient id="glow">
+      <stop offset="0" stop-color="#58e6d9" stop-opacity=".26"/>
+      <stop offset="1" stop-color="#58e6d9" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="18" stdDeviation="24" flood-color="#000" flood-opacity=".28"/>
+    </filter>
+  </defs>
+
+  <rect width="1280" height="640" fill="url(#bg)"/>
+  <circle cx="90" cy="590" r="280" fill="url(#glow)"/>
+  <circle cx="1180" cy="40" r="260" fill="url(#glow)" opacity=".45"/>
+
+  <g transform="translate(72 60)">
+    <rect width="42" height="42" rx="13" fill="#58e6d9" fill-opacity=".12" stroke="#58e6d9" stroke-opacity=".55"/>
+    <text x="21" y="29" text-anchor="middle" fill="#58e6d9" font-family="Arial, sans-serif" font-size="20" font-weight="700">N</text>
+    <text x="56" y="19" fill="#f4f8fc" font-family="Arial, sans-serif" font-size="16" font-weight="700" letter-spacing="2">NECS</text>
+    <text x="56" y="38" fill="#8da4bb" font-family="Arial, sans-serif" font-size="12">OPEN RESEARCH REFERENCE</text>
+  </g>
+
+  <text x="72" y="190" fill="#f4f8fc" font-family="Arial, sans-serif" font-size="64" font-weight="700" letter-spacing="-2">
+    Neural product search,
+  </text>
+  <text x="72" y="258" fill="url(#accent)" font-family="Arial, sans-serif" font-size="64" font-weight="700" letter-spacing="-2">
+    made inspectable.
+  </text>
+  <text x="74" y="306" fill="#a9bdcf" font-family="Arial, sans-serif" font-size="22">
+    Browser retrieval lab &#183; Amazon ESCI pipeline &#183; explicit evidence boundaries
+  </text>
+
+  <g transform="translate(72 366)" filter="url(#shadow)">
+    <rect width="1136" height="196" rx="24" fill="#0d2238" fill-opacity=".92" stroke="#91aaca" stroke-opacity=".2"/>
+
+    <g transform="translate(26 28)">
+      <rect width="430" height="56" rx="14" fill="#06111e" stroke="#8da4bb" stroke-opacity=".28"/>
+      <circle cx="28" cy="28" r="8" fill="none" stroke="#8da4bb" stroke-width="2"/>
+      <path d="m34 34 7 7" stroke="#8da4bb" stroke-width="2" stroke-linecap="round"/>
+      <text x="54" y="35" fill="#e9f0f7" font-family="Arial, sans-serif" font-size="17">wireless mouse for gaming</text>
+      <rect x="350" y="8" width="72" height="40" rx="10" fill="#58e6d9"/>
+      <text x="386" y="33" text-anchor="middle" fill="#06191b" font-family="Arial, sans-serif" font-size="13" font-weight="700">SEARCH</text>
+    </g>
+
+    <g transform="translate(500 26)">
+      <rect width="160" height="60" rx="14" fill="#102b44" stroke="#58e6d9" stroke-opacity=".25"/>
+      <text x="16" y="24" fill="#58e6d9" font-family="Arial, sans-serif" font-size="10" font-weight="700">01 &#183; EMBED</text>
+      <text x="16" y="44" fill="#c3d1df" font-family="Arial, sans-serif" font-size="13">MiniLM vectors</text>
+      <path d="M172 30h30" stroke="#63809b" stroke-width="2"/>
+      <path d="m197 25 6 5-6 5" fill="none" stroke="#63809b" stroke-width="2"/>
+    </g>
+    <g transform="translate(710 26)">
+      <rect width="160" height="60" rx="14" fill="#102b44" stroke="#70a7ff" stroke-opacity=".25"/>
+      <text x="16" y="24" fill="#70a7ff" font-family="Arial, sans-serif" font-size="10" font-weight="700">02 &#183; RETRIEVE</text>
+      <text x="16" y="44" fill="#c3d1df" font-family="Arial, sans-serif" font-size="13">Cosine ranking</text>
+      <path d="M172 30h30" stroke="#63809b" stroke-width="2"/>
+      <path d="m197 25 6 5-6 5" fill="none" stroke="#63809b" stroke-width="2"/>
+    </g>
+    <g transform="translate(920 26)">
+      <rect width="160" height="60" rx="14" fill="#102b44" stroke="#b7a9ff" stroke-opacity=".25"/>
+      <text x="16" y="24" fill="#b7a9ff" font-family="Arial, sans-serif" font-size="10" font-weight="700">03 &#183; INSPECT</text>
+      <text x="16" y="44" fill="#c3d1df" font-family="Arial, sans-serif" font-size="13">Visible evidence</text>
+    </g>
+
+    <g transform="translate(26 110)">
+      <text x="0" y="18" fill="#6f89a2" font-family="monospace" font-size="12">#01</text>
+      <text x="46" y="18" fill="#eff5fa" font-family="Arial, sans-serif" font-size="15" font-weight="700">Northstar G5 Wireless Gaming Mouse</text>
+      <rect x="342" y="5" width="72" height="20" rx="5" fill="#70a7ff" fill-opacity=".12"/>
+      <text x="378" y="19" text-anchor="middle" fill="#a8c7f8" font-family="Arial, sans-serif" font-size="10">wireless</text>
+      <text x="1000" y="18" fill="#58e6d9" font-family="monospace" font-size="13">0.812</text>
+      <rect x="0" y="36" width="1080" height="1" fill="#91aaca" fill-opacity=".14"/>
+      <text x="0" y="62" fill="#6f89a2" font-family="monospace" font-size="12">#02</text>
+      <text x="46" y="62" fill="#eff5fa" font-family="Arial, sans-serif" font-size="15" font-weight="700">ErgoLift Vertical Wireless Mouse</text>
+      <rect x="310" y="49" width="88" height="20" rx="5" fill="#70a7ff" fill-opacity=".12"/>
+      <text x="354" y="63" text-anchor="middle" fill="#a8c7f8" font-family="Arial, sans-serif" font-size="10">ergonomic</text>
+      <text x="1000" y="62" fill="#58e6d9" font-family="monospace" font-size="13">0.744</text>
+    </g>
+  </g>
+</svg>

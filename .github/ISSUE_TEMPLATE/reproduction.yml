@@ -1,0 +1,45 @@
+name: Reproduction report
+description: Report an independent benchmark rerun, including contradictory results
+title: "[Reproduction]: "
+labels: [reproduction]
+body:
+  - type: markdown
+    attributes:
+      value: >-
+        Reproductions are welcome whether they match a published bundle or not.
+        Do not include restricted datasets, credentials, or personal data.
+  - type: input
+    id: commit
+    attributes:
+      label: Repository commit
+      description: Full 40-character Git commit used for the run.
+    validations:
+      required: true
+  - type: textarea
+    id: data
+    attributes:
+      label: Dataset provenance
+      description: Source revision, locale, split, filters, and checksums.
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment and hardware
+      description: Python, dependencies, OS, CPU/GPU, memory, and runtime.
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: Commands and configuration
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: results
+    attributes:
+      label: Raw-result location and summary
+      description: Link durable raw artifacts and explain any difference from the published bundle.
+    validations:
+      required: true

@@ -32,9 +32,7 @@ def main() -> None:
     args = parser.parse_args()
 
     config = load_config(args.config)
-    examples = load_esci(
-        config.data.raw_dir, config.data.locale, config.data.use_small_version
-    )
+    examples = load_esci(config.data.raw_dir, config.data.locale, config.data.task)
 
     # Deduplicate the catalogue on product_id.
     catalogue = {ex.product_id: ex.product_text for ex in examples}
@@ -42,7 +40,11 @@ def main() -> None:
     texts = [catalogue[pid] for pid in product_ids]
     logger.info("Embedding %d unique products", len(product_ids))
 
-    model = BiEncoder(config.bi_encoder.model_name, config.bi_encoder.pooling)
+    model = BiEncoder(
+        args.retriever,
+        config.bi_encoder.pooling,
+        config.bi_encoder.normalize,
+    )
     embeddings = model.encode_texts(
         texts, batch_size=config.bi_encoder.batch_size,
         max_seq_len=config.bi_encoder.max_seq_len,

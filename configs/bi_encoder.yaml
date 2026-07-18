@@ -5,7 +5,7 @@ data:
   processed_dir: data/processed
   max_query_len: 32
   max_product_len: 128
-  use_small_version: true
+  task: task1_ranking
 
 bi_encoder:
   model_name: sentence-transformers/all-MiniLM-L6-v2
@@ -19,7 +19,7 @@ bi_encoder:
   lr: 2.0e-5
   warmup_ratio: 0.1
   num_hard_negatives: 4
-  retrieval_top_k: 100
+  retrieval_top_k: 20
 
 train:
   seed: 42

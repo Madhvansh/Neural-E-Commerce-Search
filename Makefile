@@ -1,4 +1,4 @@
-.PHONY: help install install-dev data train-retriever mine-negatives train-reranker eval serve test lint format clean
+.PHONY: help install install-dev demo data train-retriever mine-negatives train-reranker eval serve test lint format clean
 
 help:
 	@echo "Neural E-Commerce Search — common tasks"
@@ -20,6 +20,10 @@ install:
 
 install-dev:
 	pip install -r requirements-dev.txt
+	pip install -e .
+
+demo:
+	python scripts/offline_demo.py
 
 data:
 	python scripts/download_esci.py --locale us --out data/raw
@@ -43,12 +47,12 @@ test:
 	pytest
 
 lint:
-	ruff check src tests
+	ruff check src tests scripts
 	mypy src
 
 format:
-	black src tests
-	ruff check --fix src tests
+	black src tests scripts
+	ruff check --fix src tests scripts
 
 clean:
 	rm -rf .pytest_cache .ruff_cache .mypy_cache **/__pycache__ build dist *.egg-info

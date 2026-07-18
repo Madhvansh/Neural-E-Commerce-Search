@@ -22,6 +22,7 @@ from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
 
+from necs import __version__
 from necs.api.schemas import HealthResponse, ResultItem, SearchRequest, SearchResponse
 from necs.utils.logging import get_logger
 
@@ -30,7 +31,7 @@ logger = get_logger(__name__)
 app = FastAPI(
     title="Neural E-Commerce Search",
     description="Two-stage retrieve-and-rank product search on Amazon ESCI.",
-    version="0.1.0",
+    version=__version__,
 )
 
 _STATE: dict = {"searcher": None, "catalogue_size": 0}

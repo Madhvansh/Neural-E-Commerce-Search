@@ -22,8 +22,7 @@ class DataConfig:
     processed_dir: str = "data/processed"
     max_query_len: int = 32
     max_product_len: int = 128
-    # Small-version of ESCI keeps only the "reduced" product set.
-    use_small_version: bool = True
+    task: str = "task1_ranking"
 
 
 @dataclass
@@ -82,6 +81,12 @@ def _from_dict(cls: type, data: dict[str, Any]) -> Any:
     ``from __future__ import annotations`` turns field types into strings, so we
     resolve them with :func:`get_type_hints` to detect nested dataclasses.
     """
+    known_fields = {field_info.name for field_info in fields(cls)}
+    unknown = sorted(set(data) - known_fields)
+    if unknown:
+        names = ", ".join(unknown)
+        raise ValueError(f"Unknown configuration field(s) for {cls.__name__}: {names}")
+
     hints = get_type_hints(cls)
     kwargs: dict[str, Any] = {}
     for f in fields(cls):

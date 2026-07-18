@@ -1,0 +1,34 @@
+[
+  {
+    "product_id": "p100",
+    "title": "Northstar G5 Wireless Gaming Mouse",
+    "category": "mouse"
+  },
+  {
+    "product_id": "p101",
+    "title": "Orbit V2 Wireless Gaming Mouse",
+    "category": "mouse"
+  },
+  {
+    "product_id": "p102",
+    "title": "ErgoLine Wired Office Mouse",
+    "category": "mouse"
+  },
+  {
+    "product_id": "p103",
+    "title": "Extended Gaming Mouse Pad",
+    "category": "mouse-accessory",
+    "complements": ["mouse"]
+  },
+  {
+    "product_id": "p104",
+    "title": "USB-C Laptop Charger 65W",
+    "category": "charger"
+  },
+  {
+    "product_id": "p105",
+    "title": "Replacement USB Receiver for Wireless Mouse",
+    "category": "mouse-accessory",
+    "complements": ["mouse"]
+  }
+]

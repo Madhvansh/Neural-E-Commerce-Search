@@ -20,13 +20,15 @@ The graded gains in the last column feed the NDCG computation.
 ## Scale
 
 * **130K+** unique queries across the `us` / `es` / `jp` locales.
-* **~1.8M** judged (query, product) pairs in the reduced `small_version`.
-* This project defaults to the **`us`** locale and the `small_version` split
-  used for the public Task-2 (multi-class) benchmark.
+* Task 1 ranking uses rows flagged by the official `small_version` column.
+* Task 2 multiclass classification uses rows flagged by `large_version`.
+* The project defaults to the **`us`** locale and requires an explicit task
+  selection; it does not treat an unfiltered table as Task 2.
 
 ## Files
 
-The loader (`necs.data.esci.load_esci`) expects three parquet files in
+The loader (`necs.data.esci.load_esci`) expects the official examples and
+products parquet files in
 `data/raw/`:
 
 ```

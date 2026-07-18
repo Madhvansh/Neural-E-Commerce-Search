@@ -65,14 +65,18 @@ def mine_from_rankings(
     mined: dict[int, list[str]] = {}
     for qid, ranked in rankings.items():
         pos = positives.get(qid, set())
+        negative_ids = judged_negatives.get(qid, set())
         chosen: list[str] = []
+        chosen_ids: set[str] = set()
         for pid in ranked:
             if pid in pos:
                 continue  # never use a true positive as a negative
-            # Prefer hits that are top-ranked yet labelled non-exact.
-            if pid in judged_negatives.get(qid, set()) or pid not in pos:
-                if pid in text_by_id:
-                    chosen.append(text_by_id[pid])
+            # Task-specific mining uses only query-product pairs with an
+            # explicit S/C/I judgement. A product's label for another query is
+            # not evidence that it is negative for this one.
+            if pid in negative_ids and pid in text_by_id and pid not in chosen_ids:
+                chosen.append(text_by_id[pid])
+                chosen_ids.add(pid)
             if len(chosen) >= num_negatives:
                 break
         if chosen:
@@ -81,8 +85,13 @@ def mine_from_rankings(
     return mined
 
 
-def _retrieve_rankings(config, examples, top_k: int) -> dict[int, list[str]]:
-    """Embed the catalogue and retrieve top-k product ids per training query."""
+def _retrieve_rankings(
+    config,
+    examples,
+    top_k: int,
+    retriever_checkpoint: str,
+) -> dict[int, list[str]]:
+    """Retrieve with the explicit warmed checkpoint."""
     import numpy as np
 
     from necs.models.bi_encoder import BiEncoder
@@ -90,7 +99,11 @@ def _retrieve_rankings(config, examples, top_k: int) -> dict[int, list[str]]:
 
     catalogue = {ex.product_id: ex.product_text for ex in examples}
     product_ids = list(catalogue)
-    model = BiEncoder(config.bi_encoder.model_name, config.bi_encoder.pooling)
+    model = BiEncoder(
+        retriever_checkpoint,
+        config.bi_encoder.pooling,
+        config.bi_encoder.normalize,
+    )
     prod_emb = model.encode_texts([catalogue[p] for p in product_ids]).numpy()
     index = DenseIndex(dim=prod_emb.shape[1])
     index.add(product_ids, prod_emb.astype(np.float32))
@@ -108,17 +121,25 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", default="configs/bi_encoder.yaml")
     parser.add_argument("--out", default="artifacts/hard_negatives.json")
+    parser.add_argument(
+        "--retriever",
+        required=True,
+        help="warmed retriever checkpoint used for hard-negative mining",
+    )
     args = parser.parse_args()
 
     from necs.config import load_config
     from necs.data.esci import load_esci, train_test_split
 
     config = load_config(args.config)
-    examples = load_esci(
-        config.data.raw_dir, config.data.locale, config.data.use_small_version
-    )
+    examples = load_esci(config.data.raw_dir, config.data.locale, config.data.task)
     train_ex, _ = train_test_split(examples)
-    rankings = _retrieve_rankings(config, train_ex, config.bi_encoder.retrieval_top_k)
+    rankings = _retrieve_rankings(
+        config,
+        train_ex,
+        config.bi_encoder.retrieval_top_k,
+        retriever_checkpoint=args.retriever,
+    )
     mined = mine_from_rankings(rankings, train_ex, config.bi_encoder.num_hard_negatives)
 
     out = Path(args.out)

@@ -3,7 +3,7 @@ data:
   locale: us
   raw_dir: data/raw
   processed_dir: data/processed
-  use_small_version: true
+  task: task1_ranking
 
 bi_encoder:
   model_name: sentence-transformers/all-MiniLM-L6-v2
@@ -11,13 +11,13 @@ bi_encoder:
   embedding_dim: 384
   normalize: true
   max_seq_len: 128
-  retrieval_top_k: 100
+  retrieval_top_k: 20
 
 cross_encoder:
   model_name: microsoft/deberta-v3-base
   num_labels: 4
   max_seq_len: 192
-  rerank_top_k: 100
+  rerank_top_k: 10
 
 train:
   seed: 42
