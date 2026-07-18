@@ -1,0 +1,48 @@
+name: Validate IR evaluation run
+description: Fail CI on malformed TREC runs, missing queries, duplicate ranks, unjudged documents, or task mismatches.
+author: Madhvansh Choksi
+branding:
+  icon: check-circle
+  color: blue
+inputs:
+  qrels:
+    description: Path to a TREC qrels file in the calling repository.
+    required: true
+  run:
+    description: Path to a TREC run file in the calling repository.
+    required: true
+  expected-task:
+    description: Optional value to compare with '# task: ...' headers.
+    required: false
+    default: ""
+  allow-missing-queries:
+    description: Downgrade qrels queries absent from the run to warnings.
+    required: false
+    default: "false"
+  allow-unjudged:
+    description: Downgrade run documents absent from qrels to warnings.
+    required: false
+    default: "false"
+runs:
+  using: composite
+  steps:
+    - name: Validate retrieval run
+      shell: bash
+      env:
+        NECS_QRELS: ${{ inputs.qrels }}
+        NECS_RUN: ${{ inputs.run }}
+        NECS_EXPECTED_TASK: ${{ inputs.expected-task }}
+        NECS_ALLOW_MISSING: ${{ inputs.allow-missing-queries }}
+        NECS_ALLOW_UNJUDGED: ${{ inputs.allow-unjudged }}
+      run: |
+        args=(--qrels "$NECS_QRELS" --run "$NECS_RUN")
+        if [[ -n "$NECS_EXPECTED_TASK" ]]; then
+          args+=(--expected-task "$NECS_EXPECTED_TASK")
+        fi
+        if [[ "$NECS_ALLOW_MISSING" == "true" ]]; then
+          args+=(--allow-missing-queries)
+        fi
+        if [[ "$NECS_ALLOW_UNJUDGED" == "true" ]]; then
+          args+=(--allow-unjudged)
+        fi
+        PYTHONPATH="$GITHUB_ACTION_PATH/src" python -m necs.validate "${args[@]}"

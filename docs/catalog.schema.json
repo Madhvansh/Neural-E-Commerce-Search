@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://madhvansh.github.io/Neural-E-Commerce-Search/catalog.schema.json",
+  "title": "NECS browser-lab catalogue",
+  "type": "array",
+  "minItems": 1,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["id", "title", "category", "description", "tags"],
+    "properties": {
+      "id": {"type": "string", "minLength": 1},
+      "title": {"type": "string", "minLength": 1},
+      "category": {"type": "string", "minLength": 1},
+      "description": {"type": "string", "minLength": 1},
+      "tags": {
+        "type": "array",
+        "minItems": 1,
+        "items": {"type": "string", "minLength": 1}
+      }
+    }
+  }
+}

@@ -1,5 +1,5 @@
 import { pipeline } from "https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1";
-import { rankCatalog } from "./lab-core.mjs";
+import { rankCatalog, validateCatalog } from "./lab-core.mjs";
 
 const MODEL_ID = "Xenova/all-MiniLM-L6-v2";
 const MODEL_REVISION = "751bff37182d3f1213fa05d7196b954e230abad9";
@@ -167,6 +167,7 @@ const exampleButtons = [...document.querySelectorAll("[data-query]")];
 let extractorPromise;
 let catalogEmbeddingsPromise;
 let activeSearchId = 0;
+let lastSearchReport;
 
 async function loadCatalog() {
   if (!catalogPromise) {
@@ -178,16 +179,11 @@ async function loadCatalog() {
         return response.json();
       })
       .then((items) => {
-        if (!Array.isArray(items) || items.length === 0) {
-          throw new Error("Catalogue must be a non-empty array");
-        }
-        catalog = items;
+        catalog = validateCatalog(items);
         return catalog;
       })
       .catch((error) => {
-        console.warn("Using the bundled fallback catalogue", error);
-        catalog = fallbackCatalog;
-        return catalog;
+        throw new Error(`Catalogue could not be loaded: ${error.message}`);
       });
   }
   return catalogPromise;
@@ -363,6 +359,15 @@ async function runSearch(query) {
     const elapsed = Math.round(performance.now() - startedAt);
     timingElement.textContent =
       TOP_K + " of " + loadedCatalog.length + " products · " + elapsed.toLocaleString() + " ms";
+    lastSearchReport = {
+      query,
+      elapsed,
+      results: ranked.map((item) => ({
+        id: item.product.id,
+        title: item.product.title,
+        score: item.score,
+      })),
+    };
 
     const url = new URL(window.location.href);
     url.searchParams.set("q", query);
@@ -372,8 +377,9 @@ async function runSearch(query) {
     if (searchId !== activeSearchId) {
       return;
     }
-    errorElement.textContent =
-      "The browser model could not load. Check that this page can reach Hugging Face and the jsDelivr CDN, then retry. No query data was sent to this project.";
+    errorElement.textContent = error.message.startsWith("Catalogue could not be loaded:")
+      ? error.message
+      : "The browser model could not load. Check that this page can reach Hugging Face and the jsDelivr CDN, then retry. No query data was sent to this project.";
     errorElement.hidden = false;
     timingElement.textContent = "Search did not complete.";
   } finally {
@@ -420,6 +426,36 @@ document.querySelector("#share-search").addEventListener("click", async () => {
     if (error.name !== "AbortError") {
       shareStatus.textContent = "Copy the URL from your address bar";
     }
+  }
+});
+
+document.querySelector("#copy-report").addEventListener("click", async () => {
+  const shareStatus = document.querySelector("#share-status");
+  if (!lastSearchReport) {
+    shareStatus.textContent = "Run a search first";
+    return;
+  }
+
+  const resultLines = lastSearchReport.results.map(
+    (item, index) =>
+      `${index + 1}. ${item.title} (${item.id}) — cosine ${item.score.toFixed(3)}`,
+  );
+  const report = [
+    "NECS browser-lab report",
+    `Query: ${lastSearchReport.query}`,
+    `Completed search time: ${lastSearchReport.elapsed} ms`,
+    `Browser: ${navigator.userAgent}`,
+    `Model: ${MODEL_ID}@${MODEL_REVISION}`,
+    `URL: ${window.location.href}`,
+    "Top results:",
+    ...resultLines,
+  ].join("\n");
+
+  try {
+    await navigator.clipboard.writeText(report);
+    shareStatus.textContent = "Result report copied";
+  } catch (_error) {
+    shareStatus.textContent = "Clipboard blocked; copy the URL instead";
   }
 });
 

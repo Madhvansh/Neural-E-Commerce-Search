@@ -22,11 +22,14 @@ pad contribution counts, and unrelated promotional changes will be closed.
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-python -m pip install -r requirements-dev.txt
-python -m pip install -e .
+python -m pip install -e ".[dev]"
 ```
 
 On Windows PowerShell, activate with `.venv\\Scripts\\Activate.ps1`.
+
+The command above installs the lightweight package and contributor tooling used
+by CI. For model training, ESCI data, FAISS retrieval, and API work, install the
+full optional stack with `python -m pip install -e ".[all,dev]"`.
 
 ## Checks
 

@@ -3,22 +3,15 @@
 This page is the shortest path for reviewers who want to distinguish what this
 repository demonstrates today from what remains research work.
 
-## Repository provenance
-
-This repository became public in June 2026. Commit timestamps predating its
-public creation are not presented as evidence of project age, sustained public
-maintenance, adoption, or eligibility for any maintainer programme. Assess the
-project from its public releases, current code, review history, and independently
-verifiable use.
-
 ## Current evidence boundary
 
 | Surface | Current status | What it proves |
 |---|---|---|
 | Browser lab | Real client-side `all-MiniLM-L6-v2` embeddings at revision `751bff3` over a synthetic catalogue | The inspectable neural-retrieval interaction works without an account or project-side query logging |
 | Offline demo | Deterministic, dependency-light heuristic ranking over bundled synthetic data | The package, CLI, custom-catalogue schema, and result contract work |
-| Lightweight suite | 57 lightweight Python tests pass locally on Windows/Python 3.12; model-heavy optional paths are outside this count | Task-column mapping, evaluator edge cases, mining-checkpoint selection, configuration, and demo behavior are regression-tested |
-| Distribution | v0.2.0 wheel and source archive build locally; the wheel installs and runs in a fresh environment, and CI repeats the smoke | The release candidate is installable independently of the source tree |
+| Lightweight suite | 63 lightweight Python tests pass locally on Windows/Python 3.12; model-heavy optional paths are outside this count | Task-column mapping, evaluator edge cases, run integrity, mining-checkpoint selection, configuration, and demo behavior are regression-tested |
+| Distribution | Package CI builds the wheel and source archive, installs the wheel in a fresh environment, and invokes both packaged CLIs | The release candidate is checked independently of the source tree |
+| Run validator | `necs-validate` and the root GitHub Action check TREC qrels/run integrity without model dependencies | Evaluation files can be checked for structural and coverage failures before metrics are computed |
 | Learned ESCI results | No current public benchmark claim | A corrected clean training run and complete result bundle are still required |
 
 The browser lab is intentionally not described as an ESCI benchmark or as the
@@ -31,7 +24,7 @@ The lab pins Transformers.js 3.8.1 and model revision
 25 MB of quantized model assets plus the JavaScript library from Hugging Face
 and jsDelivr; the project has no query backend and the query stays on-device.
 
-## What changed in v0.2.0
+## What changed in v0.3.0
 
 The launch audit withdrew unsupported historical figures and repaired the paths
 that must be correct before learned results return:
@@ -51,6 +44,11 @@ Regression tests for these boundaries live in
 [`tests/test_evaluate.py`](tests/test_evaluate.py),
 [`tests/test_run_eval.py`](tests/test_run_eval.py), and
 [`tests/test_hard_negatives.py`](tests/test_hard_negatives.py).
+
+The v0.3.0 release also turns the reusable integrity checks into a standalone
+CLI and GitHub Action. See [`docs/validation.md`](docs/validation.md). A passing
+validation report confirms file structure and evaluation coverage only; it does
+not certify an experiment's scientific design or model quality.
 
 ## What a publishable learned result requires
 
