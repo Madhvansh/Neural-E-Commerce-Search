@@ -5,7 +5,7 @@ const MODEL_ID = "Xenova/all-MiniLM-L6-v2";
 const MODEL_REVISION = "751bff37182d3f1213fa05d7196b954e230abad9";
 const TOP_K = 6;
 
-const catalog = [
+const fallbackCatalog = [
   {
     id: "mouse-wireless-pro",
     title: "Northstar G5 Wireless Gaming Mouse",
@@ -148,6 +148,9 @@ const catalog = [
   },
 ];
 
+let catalog = fallbackCatalog;
+let catalogPromise;
+
 const form = document.querySelector("#search-form");
 const queryInput = document.querySelector("#query");
 const searchButton = document.querySelector("#search-button");
@@ -164,6 +167,31 @@ const exampleButtons = [...document.querySelectorAll("[data-query]")];
 let extractorPromise;
 let catalogEmbeddingsPromise;
 let activeSearchId = 0;
+
+async function loadCatalog() {
+  if (!catalogPromise) {
+    catalogPromise = fetch("./catalog.json", { cache: "no-cache" })
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error(`Catalogue request failed with ${response.status}`);
+        }
+        return response.json();
+      })
+      .then((items) => {
+        if (!Array.isArray(items) || items.length === 0) {
+          throw new Error("Catalogue must be a non-empty array");
+        }
+        catalog = items;
+        return catalog;
+      })
+      .catch((error) => {
+        console.warn("Using the bundled fallback catalogue", error);
+        catalog = fallbackCatalog;
+        return catalog;
+      });
+  }
+  return catalogPromise;
+}
 
 function productText(product) {
   return [
@@ -236,10 +264,12 @@ async function embed(texts) {
 
 async function getCatalogEmbeddings() {
   if (!catalogEmbeddingsPromise) {
-    catalogEmbeddingsPromise = embed(catalog.map(productText)).catch((error) => {
-      catalogEmbeddingsPromise = undefined;
-      throw error;
-    });
+    catalogEmbeddingsPromise = loadCatalog()
+      .then((items) => embed(items.map(productText)))
+      .catch((error) => {
+        catalogEmbeddingsPromise = undefined;
+        throw error;
+      });
   }
   return catalogEmbeddingsPromise;
 }
@@ -296,6 +326,7 @@ function renderResults(ranked) {
       );
     })
     .join("");
+  document.querySelector("#result-actions").hidden = false;
 }
 
 function setControlsDisabled(disabled) {
@@ -316,12 +347,13 @@ async function runSearch(query) {
 
   const startedAt = performance.now();
   try {
-    const [queryEmbeddingRows, catalogEmbeddings] = await Promise.all([
+    const [loadedCatalog, queryEmbeddingRows, catalogEmbeddings] = await Promise.all([
+      loadCatalog(),
       embed([query]),
       getCatalogEmbeddings(),
     ]);
     const queryEmbedding = queryEmbeddingRows[0];
-    const ranked = rankCatalog(catalog, catalogEmbeddings, queryEmbedding, TOP_K);
+    const ranked = rankCatalog(loadedCatalog, catalogEmbeddings, queryEmbedding, TOP_K);
 
     if (searchId !== activeSearchId) {
       return;
@@ -330,7 +362,7 @@ async function runSearch(query) {
     renderResults(ranked);
     const elapsed = Math.round(performance.now() - startedAt);
     timingElement.textContent =
-      TOP_K + " of " + catalog.length + " products · " + elapsed.toLocaleString() + " ms";
+      TOP_K + " of " + loadedCatalog.length + " products · " + elapsed.toLocaleString() + " ms";
 
     const url = new URL(window.location.href);
     url.searchParams.set("q", query);
@@ -368,8 +400,48 @@ exampleButtons.forEach((button) => {
   });
 });
 
+document.querySelector("#share-search").addEventListener("click", async () => {
+  const shareStatus = document.querySelector("#share-status");
+  const shareData = {
+    title: "NECS Browser Lab",
+    text: "Try this client-side neural product-search query.",
+    url: window.location.href,
+  };
+
+  try {
+    if (navigator.share) {
+      await navigator.share(shareData);
+      shareStatus.textContent = "Shared";
+    } else {
+      await navigator.clipboard.writeText(shareData.url);
+      shareStatus.textContent = "Link copied";
+    }
+  } catch (error) {
+    if (error.name !== "AbortError") {
+      shareStatus.textContent = "Copy the URL from your address bar";
+    }
+  }
+});
+
 const initialQuery = new URL(window.location.href).searchParams.get("q");
 if (initialQuery) {
   queryInput.value = initialQuery.slice(0, 120);
   void runSearch(queryInput.value);
+} else {
+  const connection = navigator.connection;
+  const canPrewarm =
+    !connection?.saveData && !String(connection?.effectiveType || "").includes("2g");
+  if (canPrewarm) {
+    const prewarm = () => {
+      setStatus("Preparing neural model in the background");
+      void getCatalogEmbeddings().catch(() => {
+        setStatus("Model loads on first search");
+      });
+    };
+    if ("requestIdleCallback" in window) {
+      window.requestIdleCallback(prewarm, { timeout: 1600 });
+    } else {
+      window.setTimeout(prewarm, 700);
+    }
+  }
 }

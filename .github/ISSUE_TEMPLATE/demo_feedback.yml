@@ -1,0 +1,36 @@
+name: Browser lab feedback
+description: Share one query, surprising result, timing, or published catalogue remix
+title: "[Lab]: "
+labels: [feedback]
+body:
+  - type: markdown
+    attributes:
+      value: "Thanks for trying the browser lab. A short observation is enough; do not include private queries or catalogue data."
+  - type: input
+    id: query
+    attributes:
+      label: Query used
+      placeholder: portable laptop stand
+    validations:
+      required: true
+  - type: input
+    id: top_result
+    attributes:
+      label: First result or published remix URL
+      placeholder: FoldLite Portable Aluminum Laptop Stand
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Browser and operating system
+      placeholder: Chrome on Windows 11
+    validations:
+      required: true
+  - type: textarea
+    id: observation
+    attributes:
+      label: What was useful, surprising, slow, or confusing?
+      description: Approximate first-run and cached timings are helpful when available.
+    validations:
+      required: true

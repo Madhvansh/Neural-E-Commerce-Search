@@ -1,8 +1,8 @@
 # Neural E-Commerce Search
 
-**An inspectable reference implementation of retrieve-and-rank product search:
-try real neural retrieval in the browser, then explore the full Amazon ESCI
-bi-encoder and cross-encoder pipeline.**
+**Run MiniLM semantic product retrieval entirely in your browser—no account,
+backend, or Python—then inspect a tested Python FAISS + DeBERTa
+retrieve-and-rank pipeline for Amazon ESCI.**
 
 [![CI](https://github.com/Madhvansh/Neural-E-Commerce-Search/actions/workflows/ci.yml/badge.svg)](https://github.com/Madhvansh/Neural-E-Commerce-Search/actions/workflows/ci.yml)
 [![Latest release](https://img.shields.io/github/v/release/Madhvansh/Neural-E-Commerce-Search)](https://github.com/Madhvansh/Neural-E-Commerce-Search/releases)
@@ -10,21 +10,31 @@ bi-encoder and cross-encoder pipeline.**
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 <p>
-  <a href="https://madhvansh.github.io/Neural-E-Commerce-Search/lab.html"><strong>Try the browser lab</strong></a>
+  <a href="https://madhvansh.github.io/Neural-E-Commerce-Search/lab.html"><strong>▶ Try the live neural demo</strong></a>
   &middot;
-  <a href="#run-the-offline-contract-demo-in-60-seconds"><strong>Run locally</strong></a>
+  <a href="https://github.com/Madhvansh/Neural-E-Commerce-Search/releases/tag/v0.2.0"><strong>Install v0.2.0</strong></a>
   &middot;
-  <a href="EVIDENCE.md"><strong>Inspect the evidence boundary</strong></a>
+  <a href="https://github.com/Madhvansh/Neural-E-Commerce-Search/fork"><strong>Fork for your catalogue</strong></a>
+  &middot;
+  <a href="EVIDENCE.md">Evidence and limitations</a>
 </p>
 
-![Neural E-Commerce Search browser lab preview](docs/assets/social-preview.png)
+[![Open the live neural-search lab](docs/assets/social-preview.png)](https://madhvansh.github.io/Neural-E-Commerce-Search/lab.html)
 
-> [!IMPORTANT]
-> **Status: alpha research software.** The implementation, unit tests, configs,
-> a real client-side dense-retrieval lab, and an offline UX demo are public.
-> The lab uses a general-purpose MiniLM encoder; ESCI-trained project weights,
-> a hosted end-to-end reranker, and complete raw benchmark artifacts are not
-> public. Historical headline numbers are withdrawn until correctly reproduced.
+## What you can inspect now
+
+- Real client-side MiniLM embeddings and cosine-similarity retrieval.
+- A Python retrieve-and-rank architecture with FAISS and DeBERTa components.
+- Tested ESCI loaders, hard-negative mining, evaluation, API, and packaging.
+- Explicit evidence boundaries instead of unrepeatable benchmark claims.
+
+> The live lab uses a general-purpose MiniLM encoder over a 20-product synthetic
+> catalogue. ESCI-trained project weights and corrected benchmark bundles are
+> not yet published. See [EVIDENCE.md](EVIDENCE.md) for the precise boundary.
+
+If the lab is useful, **[star the repository](https://github.com/Madhvansh/Neural-E-Commerce-Search)**
+to save it and follow the reproducibility work, or
+**[remix it with your own catalogue](docs/FORK_THE_LAB.md)** in about five minutes.
 
 ## Try neural retrieval without installing anything
 
@@ -48,6 +58,13 @@ demonstration, not benchmark evidence for the ESCI pipeline.
 
 The bundled demo needs only Python. It uses a tiny synthetic catalogue and
 transparent heuristics, so it works offline without downloading data or models:
+
+```bash
+python -m pip install "https://github.com/Madhvansh/Neural-E-Commerce-Search/releases/download/v0.2.0/neural_ecommerce_search_madhvansh-0.2.0-py3-none-any.whl"
+necs-demo --query "wireless gaming mouse" --top-k 6
+```
+
+Or run it directly from a source checkout:
 
 ```bash
 python scripts/offline_demo.py --query "wireless gaming mouse" --top-k 6
