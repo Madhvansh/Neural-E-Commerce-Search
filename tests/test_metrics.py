@@ -40,6 +40,10 @@ def test_ndcg_is_order_sensitive():
     assert good > bad
 
 
+def test_ndcg_uses_complete_qrels_for_ideal_when_provided():
+    assert ndcg_at_k([0.1], 10, ideal_gains=[1.0, 0.1]) < 1.0
+
+
 def test_mean_ndcg_averages_queries():
     q = [[1.0, 0.0], [0.0, 1.0]]
     assert 0.0 < mean_ndcg_at_k(q, 10) < 1.0
@@ -75,3 +79,8 @@ def test_classification_report_structure():
     assert report["per_class"][0]["support"] == 2
     assert 0.0 <= report["macro_f1"] <= 1.0
     assert not math.isnan(report["micro_f1"])
+
+
+def test_classification_report_rejects_length_mismatch():
+    with pytest.raises(ValueError, match="same length"):
+        classification_report([0, 1], [0], 4)

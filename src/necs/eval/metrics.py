@@ -23,14 +23,21 @@ def dcg_at_k(gains: Sequence[float], k: int) -> float:
     return float(np.sum(gains * discounts))
 
 
-def ndcg_at_k(ranked_gains: Sequence[float], k: int = 10) -> float:
+def ndcg_at_k(
+    ranked_gains: Sequence[float],
+    k: int = 10,
+    ideal_gains: Sequence[float] | None = None,
+) -> float:
     """NDCG@k for a single query.
 
     ``ranked_gains`` are relevance gains in the order the system returned them.
-    The ideal DCG is computed by sorting the same gains descending.
+    Pass the complete qrel gain set as ``ideal_gains`` whenever the returned
+    ranking can omit judged items. Falling back to ``ranked_gains`` is valid only
+    when that sequence contains the complete candidate set.
     """
     actual = dcg_at_k(ranked_gains, k)
-    ideal = dcg_at_k(sorted(ranked_gains, reverse=True), k)
+    reference = ranked_gains if ideal_gains is None else ideal_gains
+    ideal = dcg_at_k(sorted(reference, reverse=True), k)
     return actual / ideal if ideal > 0 else 0.0
 
 
@@ -67,6 +74,10 @@ def mean_mrr(per_query_relevant: Sequence[Sequence[int]]) -> float:
 
 
 def _confusion(y_true: np.ndarray, y_pred: np.ndarray, num_classes: int) -> np.ndarray:
+    if y_true.ndim != 1 or y_pred.ndim != 1:
+        raise ValueError("y_true and y_pred must be one-dimensional")
+    if len(y_true) != len(y_pred):
+        raise ValueError("y_true and y_pred must have the same length")
     cm = np.zeros((num_classes, num_classes), dtype=int)
     for t, p in zip(y_true, y_pred):
         cm[t, p] += 1

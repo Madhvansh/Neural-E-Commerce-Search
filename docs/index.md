@@ -4,46 +4,60 @@ title: Neural E-Commerce Search
 
 # Neural E-Commerce Search
 
-**Two-stage retrieve-and-rank neural product search on the Amazon ESCI
-Shopping Queries dataset.**
+Neural E-Commerce Search is an alpha research implementation of a two-stage
+product-search pipeline on the Amazon ESCI benchmark.
 
-Given a shopping query, the system retrieves products from a large catalogue and
-reranks them, classifying every result on the **ESCI** taxonomy —
-**E**xact / **S**ubstitute / **C**omplement / **I**rrelevant. A dense
-**bi-encoder** does cheap candidate retrieval; a **DeBERTa cross-encoder** does
-precise reranking and 4-way classification.
-
-```
- query ─▶ bi-encoder ─▶ FAISS top-100 ─▶ DeBERTa cross-encoder ─▶ ranked + labelled results
-        (retrieve, cheap)                 (rerank, precise)
+```text
+query -> bi-encoder -> candidate set -> DeBERTa cross-encoder -> ranked ESCI labels
 ```
 
-## Results
+## Try neural retrieval in the browser
 
-| System                                   | NDCG@10 | Recall@100 | micro-F1 |
-|------------------------------------------|:-------:|:----------:|:--------:|
-| BM25 (lexical baseline)                  |  0.61   |    0.82    |    —     |
-| Dense bi-encoder only                    |  0.66   |    0.89    |    —     |
-| **Two-stage (dense + DeBERTa)**          | **0.71**|  **0.89**  | **0.74** |
+The [NECS Browser Lab](lab.html) runs a public MiniLM encoder through
+Transformers.js and ranks a small synthetic product catalogue entirely on the
+visitor's device. It needs no account or local environment and makes its model,
+scores, and evidence boundary visible.
 
-**NDCG@10 = 0.71 (+16% over BM25), micro-F1 = 0.74.** The largest gains land on
-Substitute-vs-Complement queries that lexical matching cannot resolve.
+The lab is a real dense-retrieval demonstration, but it is not the repository's
+unreleased ESCI-trained bi-encoder/cross-encoder pipeline and does not reproduce
+historical benchmark figures.
+
+## Start without data or models
+
+From a source checkout, run the deterministic synthetic demo:
+
+```bash
+python scripts/offline_demo.py --query "wireless gaming mouse"
+```
+
+It demonstrates the output contract with transparent heuristics. It does not
+run the neural models and is not benchmark evidence.
+
+## Evidence status
+
+The code, configs, lightweight tests, browser retriever, and offline demo are
+public. ESCI-trained project weights, full raw benchmark artifacts, multi-seed
+reruns, and a hosted end-to-end reranker are not yet published. Historical
+metrics are withdrawn pending a corrected rerun. Read [Experiments](experiments.md) and
+[Reproducibility](reproducibility.md) before citing them.
 
 ## Documentation
 
-- [Architecture](architecture.md) — two-stage design, module map, rationale
-- [Data](data.md) — ESCI taxonomy, files, preprocessing
-- [Training](training.md) — step-by-step training and hyper-parameters
-- [Experiments](experiments.md) — results, ablations, confusion matrix
-- [Deployment](deployment.md) — serving, Docker, API reference, scaling
+- [Architecture](architecture.md): two-stage design and module map
+- [Data](data.md): ESCI taxonomy, provenance, and preprocessing
+- [Training](training.md): training workflow and configuration
+- [Experiments](experiments.md): evidence status and rerun plan
+- [Reproducibility](reproducibility.md): publication checklist
+- [Deployment](deployment.md): serving and operational caveats
+- [Browser lab](lab.html): client-side MiniLM retrieval demo
+- [Releasing](releasing.md): package and release safety checks
 
 ## Links
 
-- **Source code:** [github.com/Madhvansh/Neural-E-Commerce-Search](https://github.com/Madhvansh/Neural-E-Commerce-Search)
-- **Latest release:** [releases](https://github.com/Madhvansh/Neural-E-Commerce-Search/releases)
+- [Source code](https://github.com/Madhvansh/Neural-E-Commerce-Search)
+- [Roadmap](https://github.com/Madhvansh/Neural-E-Commerce-Search/blob/main/ROADMAP.md)
+- [Contributing](https://github.com/Madhvansh/Neural-E-Commerce-Search/blob/main/CONTRIBUTING.md)
 
----
-
-<sub>MIT licensed. Built on the
+MIT licensed. Built on the
 [Amazon ESCI benchmark](https://github.com/amazon-science/esci-data)
-(Reddy et al., 2022).</sub>
+(Reddy et al., 2022).

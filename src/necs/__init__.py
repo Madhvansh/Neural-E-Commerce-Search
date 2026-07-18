@@ -13,7 +13,7 @@ need them so that utilities, metrics, and configs can be used without a full
 deep-learning stack installed.
 """
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 ESCI_LABELS = ("E", "S", "C", "I")
 ESCI_LABEL_NAMES = {

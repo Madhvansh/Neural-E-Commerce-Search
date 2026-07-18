@@ -27,9 +27,10 @@ The script runs three steps:
    batch's document pool. The loss target for query *i* stays column *i* because
    documents are laid out as `[positives | hard-negatives]`.
 
-Hard negatives are the single biggest lever on Substitute/Complement queries:
-random negatives are trivially separable, whereas a Substitute product that the
-retriever currently ranks #2 is exactly the signal we want.
+Hard negatives are intended to focus training on Substitute/Complement cases:
+random negatives may be trivially separable, while a non-Exact product that the
+retriever ranks highly is a more informative error. The size of any improvement
+must be established by the reproducible ablation plan rather than assumed here.
 
 ### Key hyper-parameters (`configs/bi_encoder.yaml`)
 
@@ -79,6 +80,9 @@ See [`docs/experiments.md`](experiments.md) for results.
 
 ## Reproducibility
 
-* All entry points call `seed_everything(seed)` (Python / NumPy / Torch).
-* Configs are plain YAML and fully captured per run.
-* Mixed precision (`fp16`) is on by default on CUDA and is a no-op on CPU.
+Configs are plain YAML and the training code exposes deterministic seeding for
+Python, NumPy, and Torch. A seed alone does not make a run reproducible: save the
+exact config, dependency versions, dataset checksums, model revisions, hardware,
+logs, and checkpoint hashes described in
+[`docs/reproducibility.md`](reproducibility.md). Mixed precision is enabled by
+configuration on CUDA and can change numeric behavior across hardware.

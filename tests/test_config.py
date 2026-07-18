@@ -35,6 +35,13 @@ def test_load_config_overrides_defaults(tmp_path):
     assert cfg.cross_encoder.num_labels == 4
 
 
+def test_load_config_rejects_stale_data_protocol_key(tmp_path):
+    path = tmp_path / "stale.yaml"
+    path.write_text("data:\n  use_small_version: true\n")
+    with pytest.raises(ValueError, match="use_small_version"):
+        load_config(path)
+
+
 def test_merge_overrides_returns_new_config():
     cfg = Config()
     new = merge_overrides(cfg, {"bi_encoder.lr": 5e-5, "train.seed": 99})

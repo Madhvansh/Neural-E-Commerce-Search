@@ -40,9 +40,7 @@ def train_cross_encoder(config: Config) -> CrossEncoder:
     device = "cuda" if torch.cuda.is_available() else "cpu"
     cfg = config.cross_encoder
 
-    examples = load_esci(
-        config.data.raw_dir, config.data.locale, config.data.use_small_version
-    )
+    examples = load_esci(config.data.raw_dir, config.data.locale, config.data.task)
     train_ex, _ = train_test_split(examples)
     logger.info("Label distribution: %s", class_distribution(train_ex))
 

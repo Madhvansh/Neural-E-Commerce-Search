@@ -1,0 +1,12 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it using this metadata."
+title: "Neural E-Commerce Search"
+type: software
+authors:
+  - family-names: Choksi
+    given-names: Madhvansh
+repository-code: "https://github.com/Madhvansh/Neural-E-Commerce-Search"
+url: "https://madhvansh.github.io/Neural-E-Commerce-Search/"
+license: MIT
+version: 0.2.0
+date-released: 2026-07-19

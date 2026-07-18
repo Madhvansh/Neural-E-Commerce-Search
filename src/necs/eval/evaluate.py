@@ -1,11 +1,8 @@
-"""End-to-end evaluation of the two-stage pipeline against the BM25 baseline.
+"""Evaluation helpers for the official ESCI ranking and classification tasks.
 
-For every test query we form the candidate set from its judged products, score
-them with each system, and compute:
-
-* **NDCG@10** over graded ESCI gains (ranking quality),
-* **Recall@100** of Exact products (first-stage coverage),
-* **micro-F1** of the 4-way ESCI prediction (reranker classification).
+Ranking metrics are computed against the complete judged candidate set for each
+query. Classification metrics are computed separately because Amazon's public
+Task 1 ranking subset and Task 2 multiclass dataset are different protocols.
 """
 
 from __future__ import annotations
@@ -15,10 +12,7 @@ from collections.abc import Sequence
 
 from necs.data.esci import ESCIExample
 from necs.data.preprocess import label_to_index, relevance_gain
-from necs.eval.metrics import classification_report, mean_ndcg_at_k, recall_at_k
-from necs.utils.logging import get_logger
-
-logger = get_logger(__name__)
+from necs.eval.metrics import classification_report, ndcg_at_k, recall_at_k
 
 
 def group_by_query(examples: Sequence[ESCIExample]) -> dict[int, list[ESCIExample]]:
@@ -31,7 +25,7 @@ def group_by_query(examples: Sequence[ESCIExample]) -> dict[int, list[ESCIExampl
 def gains_for_ranking(
     ranked_product_ids: Sequence[str], label_by_id: dict[str, str]
 ) -> list[float]:
-    """Map a ranking of product ids to graded ESCI relevance gains."""
+    """Map returned product ids to graded ESCI gains."""
     return [relevance_gain(label_by_id.get(pid, "I")) for pid in ranked_product_ids]
 
 
@@ -39,37 +33,62 @@ def evaluate_rankings(
     rankings: dict[int, list[str]],
     grouped: dict[int, list[ESCIExample]],
     k: int = 10,
-    recall_k: int = 100,
+    recall_k: int = 10,
 ) -> dict[str, float]:
-    """Compute ranking metrics from per-query product-id rankings."""
-    per_query_gains: list[list[float]] = []
+    """Compute ranking metrics against complete per-query judgements.
+
+    Missing queries count as zero rather than disappearing from the mean. The
+    ideal DCG comes from all judged candidates, so a system cannot improve its
+    denominator by omitting relevant products from its returned ranking.
+    """
+    unknown_queries = sorted(set(rankings) - set(grouped))
+    if unknown_queries:
+        raise ValueError(f"Rankings contain unknown query ids: {unknown_queries}")
+
+    ndcgs: list[float] = []
     recalls: list[float] = []
-    for qid, ranked in rankings.items():
-        label_by_id = {ex.product_id: ex.label for ex in grouped.get(qid, [])}
-        per_query_gains.append(gains_for_ranking(ranked, label_by_id))
 
-        num_exact = sum(1 for ex in grouped.get(qid, []) if ex.label == "E")
-        rel_flags = [1 if label_by_id.get(pid) == "E" else 0 for pid in ranked]
-        recalls.append(recall_at_k(rel_flags, num_exact, recall_k))
+    for qid, examples in grouped.items():
+        ranked = rankings.get(qid, [])
+        label_by_id = {ex.product_id: ex.label for ex in examples}
+        if len(ranked) != len(set(ranked)):
+            raise ValueError(f"Ranking for query {qid} contains duplicate product ids")
+        unknown_products = sorted(set(ranked) - set(label_by_id))
+        if unknown_products:
+            raise ValueError(
+                f"Ranking for query {qid} contains unjudged product ids: "
+                f"{unknown_products}"
+            )
+        actual_gains = gains_for_ranking(ranked, label_by_id)
+        ideal_gains = sorted(
+            (relevance_gain(ex.label) for ex in examples),
+            reverse=True,
+        )
+        ndcgs.append(ndcg_at_k(actual_gains, k, ideal_gains=ideal_gains))
 
+        num_exact = sum(1 for ex in examples if ex.label == "E")
+        exact_flags = [1 if label_by_id.get(pid) == "E" else 0 for pid in ranked]
+        recalls.append(recall_at_k(exact_flags, num_exact, recall_k))
+
+    count = len(grouped)
     return {
-        f"ndcg@{k}": mean_ndcg_at_k(per_query_gains, k),
-        f"recall@{recall_k}": sum(recalls) / len(recalls) if recalls else 0.0,
-        "num_queries": len(rankings),
+        f"ndcg@{k}": sum(ndcgs) / count if count else 0.0,
+        f"recall@{recall_k}": sum(recalls) / count if count else 0.0,
+        "num_queries": count,
     }
 
 
-def evaluate_classification(
-    y_true: Sequence[str], y_pred: Sequence[str]
-) -> dict:
-    """Classification report from predicted vs gold ESCI letters."""
-    yt = [label_to_index(y) for y in y_true]
-    yp = [label_to_index(y) for y in y_pred]
-    return classification_report(yt, yp, num_classes=4)
+def evaluate_classification(y_true: Sequence[str], y_pred: Sequence[str]) -> dict:
+    """Return a four-way ESCI classification report."""
+    if len(y_true) != len(y_pred):
+        raise ValueError("y_true and y_pred must have the same length")
+    truth = [label_to_index(label) for label in y_true]
+    predicted = [label_to_index(label) for label in y_pred]
+    return classification_report(truth, predicted, num_classes=4)
 
 
 def summarize(name: str, ranking: dict, classification: dict | None = None) -> str:
-    """Human-readable one-block summary for logs / reports."""
+    """Format a compact metric block for logs and saved run output."""
     lines = [f"=== {name} ==="]
     for key, value in ranking.items():
         formatted = f"{value:.4f}" if isinstance(value, float) else str(value)

@@ -13,6 +13,7 @@ dist/
 .venv/
 venv/
 env/
+.verify-deps/
 
 # Testing / coverage
 .pytest_cache/

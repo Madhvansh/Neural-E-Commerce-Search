@@ -47,6 +47,10 @@ image on `pytorch/pytorch:*-cuda*` and install `faiss-gpu`.
 
 ## API
 
+The JSON below is an illustrative response shape. Its catalogue size, latency,
+identifier, score, and text are synthetic examples, not measurements from a
+published deployment.
+
 ### `GET /health`
 
 ```json
@@ -106,8 +110,10 @@ returns `503` and `/health` reports `model_loaded: false`.
   artifacts via a volume or object storage synced on boot.
 
 > A public live endpoint is intentionally **not** committed here because it
-> requires GPU-trained artifacts and a paid host; the blueprint above makes
-> standing one up a one-step operation once you have trained models.
+> requires trained artifacts and hosted infrastructure. The configurations are
+> starting points, not a verified one-click deployment; validate artifact
+> loading, memory, latency, authentication, abuse controls, and costs before
+> exposing the service publicly.
 
 ## Documentation site
 

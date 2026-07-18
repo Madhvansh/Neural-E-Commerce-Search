@@ -3,13 +3,17 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "necs"
-version = "0.1.0"
+name = "neural-ecommerce-search-madhvansh"
+version = "0.2.0"
 description = "Two-stage retrieve-and-rank neural product search on Amazon ESCI"
 readme = "README.md"
 requires-python = ">=3.9"
-license = { text = "MIT" }
+license = "MIT"
 authors = [{ name = "Madhvansh" }]
+dependencies = [
+    "numpy>=1.24.0",
+    "PyYAML>=6.0",
+]
 keywords = [
     "information-retrieval",
     "neural-search",
@@ -20,9 +24,75 @@ keywords = [
     "amazon-esci",
     "e-commerce",
 ]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+[project.optional-dependencies]
+models = [
+    "torch>=2.1.0",
+    "transformers>=4.38.0",
+    "sentence-transformers>=2.5.0",
+]
+retrieval = [
+    "faiss-cpu>=1.7.4",
+    "rank-bm25>=0.2.2",
+]
+data = [
+    "datasets>=2.16.0",
+    "pandas>=2.0.0",
+    "pyarrow>=14.0.0",
+    "tqdm>=4.66.0",
+]
+serve = [
+    "fastapi>=0.110.0",
+    "uvicorn[standard]>=0.27.0",
+    "pydantic>=2.6.0",
+]
+dev = [
+    "build>=1.2.0",
+    "pytest>=8.0.0",
+    "pytest-cov>=4.1.0",
+    "ruff>=0.3.0",
+    "black>=24.0.0",
+    "mypy>=1.8.0",
+]
+all = [
+    "torch>=2.1.0",
+    "transformers>=4.38.0",
+    "sentence-transformers>=2.5.0",
+    "faiss-cpu>=1.7.4",
+    "rank-bm25>=0.2.2",
+    "datasets>=2.16.0",
+    "pandas>=2.0.0",
+    "pyarrow>=14.0.0",
+    "tqdm>=4.66.0",
+    "fastapi>=0.110.0",
+    "uvicorn[standard]>=0.27.0",
+    "pydantic>=2.6.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/Madhvansh/Neural-E-Commerce-Search"
+Documentation = "https://madhvansh.github.io/Neural-E-Commerce-Search/"
+Issues = "https://github.com/Madhvansh/Neural-E-Commerce-Search/issues"
+Source = "https://github.com/Madhvansh/Neural-E-Commerce-Search"
+
+[project.scripts]
+necs-demo = "necs.demo:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+necs = ["demo_catalog.json"]
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]

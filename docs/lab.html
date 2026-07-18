@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#07111f">
+    <meta
+      name="description"
+      content="Run neural product retrieval in your browser with pinned MiniLM embeddings. No project backend, signup, or uploaded queries."
+    >
+    <meta property="og:title" content="NECS Browser Lab — neural product search in your browser">
+    <meta
+      property="og:description"
+      content="A no-login product-search lab using real client-side neural embeddings."
+    >
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://madhvansh.github.io/Neural-E-Commerce-Search/lab.html">
+    <meta property="og:image" content="https://madhvansh.github.io/Neural-E-Commerce-Search/assets/social-preview.png">
+    <meta property="og:image:width" content="1280">
+    <meta property="og:image:height" content="640">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="NECS Browser Lab — neural product search in your browser">
+    <meta name="twitter:description" content="Inspectable client-side MiniLM retrieval over a synthetic product catalogue.">
+    <meta name="twitter:image" content="https://madhvansh.github.io/Neural-E-Commerce-Search/assets/social-preview.png">
+    <title>NECS Browser Lab — neural product search in your browser</title>
+    <link rel="canonical" href="https://madhvansh.github.io/Neural-E-Commerce-Search/lab.html">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="preconnect" href="https://huggingface.co" crossorigin>
+    <link rel="stylesheet" href="./assets/lab.css">
+  </head>
+  <body>
+    <div class="page-glow page-glow-one" aria-hidden="true"></div>
+    <div class="page-glow page-glow-two" aria-hidden="true"></div>
+
+    <header class="site-header">
+      <a class="brand" href="./">
+        <span class="brand-mark" aria-hidden="true">N</span>
+        <span>
+          <strong>NECS</strong>
+          <small>Browser Lab</small>
+        </span>
+      </a>
+      <nav aria-label="Project links">
+        <a href="https://github.com/Madhvansh/Neural-E-Commerce-Search">GitHub</a>
+        <a href="https://github.com/Madhvansh/Neural-E-Commerce-Search#contributing">
+          Contribute
+        </a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="eyebrow">
+          <span class="pulse" aria-hidden="true"></span>
+          Runs locally in your browser
+        </div>
+        <h1>Search products with <span>real neural embeddings.</span></h1>
+        <p class="hero-copy">
+          Type a shopping query. A compact MiniLM model embeds the query and
+          catalogue on your device, then ranks products by semantic similarity.
+          There is no project backend, account, or uploaded query; model and
+          library assets are fetched from Hugging Face and jsDelivr.
+        </p>
+
+        <div class="trust-row" aria-label="Demo properties">
+          <span>Client-side inference</span>
+          <span>No signup</span>
+          <span>Open source</span>
+          <span>20-product sample</span>
+        </div>
+      </section>
+
+      <section class="search-panel" aria-labelledby="search-title">
+        <div class="panel-heading">
+          <div>
+            <p class="section-kicker">Try the retriever</p>
+            <h2 id="search-title">What are you looking for?</h2>
+          </div>
+          <div id="model-status" class="model-status" role="status" aria-live="polite">
+            <span class="status-dot" aria-hidden="true"></span>
+            Model loads on first search
+          </div>
+        </div>
+
+        <form id="search-form" class="search-form">
+          <label class="sr-only" for="query">Product search query</label>
+          <div class="search-box">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m21 21-4.35-4.35m2.35-5.65a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z"></path>
+            </svg>
+            <input
+              id="query"
+              name="query"
+              type="search"
+              value="wireless mouse for gaming"
+              autocomplete="off"
+              maxlength="120"
+              required
+            >
+            <button id="search-button" type="submit">
+              <span>Search</span>
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M5 12h14m-6-6 6 6-6 6"></path>
+              </svg>
+            </button>
+          </div>
+        </form>
+
+        <div class="examples" aria-label="Example queries">
+          <span>Try:</span>
+          <button type="button" data-query="wireless mouse for gaming">gaming mouse</button>
+          <button type="button" data-query="portable laptop stand">laptop stand</button>
+          <button type="button" data-query="noise cancelling headphones">headphones</button>
+          <button type="button" data-query="storage upgrade for my laptop">storage upgrade</button>
+        </div>
+
+        <div id="progress-wrap" class="progress-wrap" hidden>
+          <div class="progress-copy">
+            <span id="progress-label">Loading model assets</span>
+            <span id="progress-value">0%</span>
+          </div>
+          <div class="progress-track" aria-hidden="true">
+            <div id="progress-bar" class="progress-bar"></div>
+          </div>
+          <p>
+            The first query downloads roughly 25 MB of quantized model assets,
+            plus the Transformers.js library, then caches them. Later searches
+            are fast.
+          </p>
+        </div>
+      </section>
+
+      <section class="pipeline" aria-label="Retrieval pipeline">
+        <article>
+          <span class="stage-number">01</span>
+          <div>
+            <strong>Embed</strong>
+            <p>MiniLM converts query and product text into normalized vectors.</p>
+          </div>
+        </article>
+        <span class="pipeline-arrow" aria-hidden="true">→</span>
+        <article>
+          <span class="stage-number">02</span>
+          <div>
+            <strong>Retrieve</strong>
+            <p>Cosine similarity selects the closest products in embedding space.</p>
+          </div>
+        </article>
+        <span class="pipeline-arrow" aria-hidden="true">→</span>
+        <article>
+          <span class="stage-number">03</span>
+          <div>
+            <strong>Inspect</strong>
+            <p>Scores and product metadata stay visible instead of hiding the result.</p>
+          </div>
+        </article>
+      </section>
+
+      <section class="results-section" aria-labelledby="results-title">
+        <div class="results-heading">
+          <div>
+            <p class="section-kicker">Ranked catalogue</p>
+            <h2 id="results-title">Results</h2>
+          </div>
+          <p id="timing" class="timing">Run a search to populate the ranking.</p>
+        </div>
+        <div id="error-message" class="error-message" role="alert" hidden></div>
+        <div id="results" class="results-grid" aria-live="polite">
+          <div class="empty-state">
+            <div class="empty-icon" aria-hidden="true">⌁</div>
+            <strong>The model is ready when you are.</strong>
+            <p>Your query is processed on this device.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="evidence-note">
+        <div>
+          <p class="section-kicker">Evidence boundary</p>
+          <h2>A real neural demo, with a precise claim.</h2>
+        </div>
+        <p>
+          This lab uses the public
+          <a href="https://huggingface.co/Xenova/all-MiniLM-L6-v2/tree/751bff37182d3f1213fa05d7196b954e230abad9">all-MiniLM-L6-v2</a>
+          encoder at revision <code>751bff3</code> through Transformers.js 3.8.1
+          for dense retrieval over a synthetic catalogue. It does not run this
+          repository's unreleased ESCI-trained bi-encoder or DeBERTa reranker,
+          and it is not benchmark evidence. The distinction is intentional.
+        </p>
+      </section>
+
+      <section class="cta">
+        <div>
+          <p class="section-kicker">Build or break it</p>
+          <h2>Useful for your search work?</h2>
+          <p>
+            Inspect the pipeline, reproduce a result, or report the first confusing edge case.
+          </p>
+        </div>
+        <div class="cta-actions">
+          <a class="button-primary" href="https://github.com/Madhvansh/Neural-E-Commerce-Search">
+            View source on GitHub
+          </a>
+          <a class="button-secondary" href="https://github.com/Madhvansh/Neural-E-Commerce-Search/issues/new/choose">
+            Report an issue
+          </a>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <span>MIT licensed · Built as an inspectable research reference</span>
+      <a href="https://github.com/amazon-science/esci-data">Amazon ESCI dataset</a>
+    </footer>
+
+    <script type="module" src="./assets/lab.js"></script>
+  </body>
+</html>

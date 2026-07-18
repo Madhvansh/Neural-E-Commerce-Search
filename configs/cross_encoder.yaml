@@ -5,7 +5,7 @@ data:
   processed_dir: data/processed
   max_query_len: 32
   max_product_len: 128
-  use_small_version: true
+  task: task2_classification
 
 cross_encoder:
   model_name: microsoft/deberta-v3-base
