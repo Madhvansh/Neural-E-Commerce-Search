@@ -3,6 +3,14 @@
 This page is the shortest path for reviewers who want to distinguish what this
 repository demonstrates today from what remains research work.
 
+## Repository provenance
+
+This repository became public in June 2026. Commit timestamps predating its
+public creation are not presented as evidence of project age, sustained public
+maintenance, adoption, or eligibility for any maintainer programme. Assess the
+project from its public releases, current code, review history, and independently
+verifiable use.
+
 ## Current evidence boundary
 
 | Surface | Current status | What it proves |

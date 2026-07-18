@@ -1,0 +1,22 @@
+[
+  {"id":"mouse-wireless-pro","title":"Northstar G5 Wireless Gaming Mouse","category":"Gaming mouse","description":"Low-latency wireless mouse with a lightweight shell and adjustable DPI.","tags":["wireless","gaming","mouse"]},
+  {"id":"mouse-vertical","title":"ErgoLift Vertical Wireless Mouse","category":"Office mouse","description":"Ergonomic vertical mouse designed for long work sessions and quiet clicking.","tags":["ergonomic","wireless","office"]},
+  {"id":"mouse-wired","title":"Vector M2 Wired Precision Mouse","category":"Wired mouse","description":"Compact wired optical mouse for reliable everyday desktop use.","tags":["wired","mouse","desktop"]},
+  {"id":"mouse-pad","title":"Atlas Extended Gaming Mouse Pad","category":"Mouse accessory","description":"Large desk mat with a low-friction surface for keyboard and mouse.","tags":["mouse pad","desk mat","gaming"]},
+  {"id":"mouse-receiver","title":"Universal 2.4 GHz USB Mouse Receiver","category":"Mouse accessory","description":"Replacement USB receiver for compatible wireless mice and keyboards.","tags":["receiver","usb","wireless"]},
+  {"id":"keyboard-mechanical","title":"Nova 75 Mechanical Gaming Keyboard","category":"Keyboard","description":"Hot-swappable compact mechanical keyboard with tactile switches.","tags":["mechanical","gaming","keyboard"]},
+  {"id":"headphones-anc","title":"SilenceAir Noise-Cancelling Headphones","category":"Headphones","description":"Over-ear Bluetooth headphones with active noise cancellation for travel.","tags":["headphones","bluetooth","noise cancelling"]},
+  {"id":"headset-gaming","title":"Pulse X7 Wireless Gaming Headset","category":"Gaming headset","description":"Low-latency wireless headset with a detachable microphone.","tags":["gaming","headset","microphone"]},
+  {"id":"earbuds","title":"PocketBeat True Wireless Earbuds","category":"Earbuds","description":"Compact Bluetooth earbuds with a pocket charging case.","tags":["earbuds","wireless","portable"]},
+  {"id":"laptop-stand","title":"FoldLite Portable Aluminum Laptop Stand","category":"Laptop stand","description":"Foldable ventilated notebook riser for travel and ergonomic desk setups.","tags":["portable","laptop stand","ergonomic"]},
+  {"id":"usb-hub","title":"DockFlow 8-in-1 USB-C Hub","category":"Laptop accessory","description":"USB-C adapter with HDMI, card reader, power delivery, and USB ports.","tags":["usb-c","hub","laptop"]},
+  {"id":"charger","title":"GaN 65W USB-C Laptop Charger","category":"Charger","description":"Compact fast charger for USB-C notebooks, tablets, and phones.","tags":["charger","usb-c","laptop"]},
+  {"id":"ssd","title":"Velocity 1TB NVMe Internal SSD","category":"Storage","description":"PCIe solid-state drive for a fast desktop or laptop storage upgrade.","tags":["ssd","storage","upgrade"]},
+  {"id":"portable-ssd","title":"RoamDrive 1TB Portable SSD","category":"External storage","description":"Pocket-size USB-C solid-state drive for backups and large project files.","tags":["portable","ssd","backup"]},
+  {"id":"monitor","title":"ViewPoint 27-inch QHD Monitor","category":"Monitor","description":"High-resolution IPS desktop display with an adjustable stand.","tags":["monitor","display","desktop"]},
+  {"id":"webcam","title":"ClearMeet 1080p USB Webcam","category":"Webcam","description":"Full-HD camera with dual microphones for calls and streaming.","tags":["webcam","video","usb"]},
+  {"id":"phone-case","title":"ShieldCase Rugged Phone Cover","category":"Phone accessory","description":"Shock-resistant protective smartphone case with raised edges.","tags":["phone","case","protective"]},
+  {"id":"coffee-grinder","title":"BurrCraft Electric Coffee Grinder","category":"Kitchen","description":"Adjustable burr grinder for espresso, filter, and French press coffee.","tags":["coffee","grinder","kitchen"]},
+  {"id":"running-shoes","title":"AeroStride Lightweight Running Shoes","category":"Footwear","description":"Breathable cushioned shoes for road running and daily training.","tags":["running","shoes","fitness"]},
+  {"id":"hdmi-cable","title":"UltraLink 2-metre HDMI Cable","category":"Cable","description":"Braided digital video cable for monitors, televisions, and game consoles.","tags":["hdmi","cable","display"]}
+]

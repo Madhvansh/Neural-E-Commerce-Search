@@ -579,6 +579,47 @@ input::placeholder {
   font-size: 0.84rem;
 }
 
+.result-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 9px;
+  margin-top: 18px;
+  padding: 14px 16px;
+  border: 1px solid rgba(88, 230, 217, 0.24);
+  border-radius: 13px;
+  background: rgba(88, 230, 217, 0.055);
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.result-actions strong {
+  color: var(--text);
+}
+
+.result-actions a,
+.result-actions button {
+  padding: 7px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(4, 13, 24, 0.42);
+  color: #c7d4e1;
+  font: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.result-actions a:hover,
+.result-actions button:hover {
+  border-color: rgba(88, 230, 217, 0.45);
+  color: var(--cyan);
+}
+
+#share-status {
+  min-width: 5rem;
+  color: var(--cyan);
+}
+
 .evidence-note,
 .cta {
   display: grid;
