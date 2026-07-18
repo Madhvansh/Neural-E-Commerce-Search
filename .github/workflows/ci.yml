@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.9", "3.11"]
+        python-version: ["3.9", "3.11", "3.12"]
 
     steps:
       - uses: actions/checkout@v4
@@ -68,3 +68,20 @@ jobs:
           python -m venv .venv-smoke
           .venv-smoke/bin/python -m pip install dist/*.whl
           .venv-smoke/bin/necs-demo --json --top-k 3
+          .venv-smoke/bin/necs-validate \
+            --qrels examples/validation/sample.qrels \
+            --run examples/validation/sample.run \
+            --expected-task task1_ranking
+
+  action-smoke:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run the repository as a local composite action
+        uses: ./
+        with:
+          qrels: examples/validation/sample.qrels
+          run: examples/validation/sample.run
+          expected-task: task1_ranking

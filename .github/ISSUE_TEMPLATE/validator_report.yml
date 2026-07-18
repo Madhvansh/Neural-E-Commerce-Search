@@ -1,0 +1,67 @@
+name: Validator compatibility report
+description: Share a true positive, false positive, or integration result from necs-validate
+title: "[Validator]: "
+body:
+  - type: markdown
+    attributes:
+      value: >-
+        Thanks for testing the structural preflight. True positives, false
+        positives, and clean compatibility reports are equally useful. Use
+        synthetic or public fixtures only; do not attach restricted qrels,
+        credentials, or private data.
+  - type: dropdown
+    id: outcome
+    attributes:
+      label: Outcome
+      options:
+        - Clean compatibility report
+        - Expected problem detected
+        - Possible false positive
+        - Possible false negative
+        - Installation or Action failure
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Validator version
+      description: Release tag or full commit SHA.
+      placeholder: v0.3.0
+    validations:
+      required: true
+  - type: input
+    id: integration
+    attributes:
+      label: Public integration or project
+      description: Optional workflow, repository, or project URL.
+      placeholder: https://github.com/owner/repository/actions/runs/...
+  - type: textarea
+    id: command
+    attributes:
+      label: Command or workflow step
+      description: Include strict flags if you enabled them.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: report
+    attributes:
+      label: Validator report
+      description: Paste text or JSON output after removing private paths or data.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: expectation
+    attributes:
+      label: Expected behavior and context
+      description: Explain what the upstream evaluator or exporter accepts and why.
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, Python version, installation method, and relevant IR tooling.
+    validations:
+      required: true

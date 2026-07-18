@@ -10,6 +10,44 @@ export function dot(left, right) {
   return total;
 }
 
+export function validateCatalog(catalog) {
+  if (!Array.isArray(catalog) || catalog.length === 0) {
+    throw new Error("Catalogue must be a non-empty JSON array");
+  }
+
+  const seenIds = new Set();
+  const textFields = ["id", "title", "category", "description"];
+  const allowedFields = new Set([...textFields, "tags"]);
+  catalog.forEach((product, index) => {
+    if (!product || typeof product !== "object" || Array.isArray(product)) {
+      throw new Error(`Catalogue item ${index + 1} must be an object`);
+    }
+    for (const field of textFields) {
+      if (typeof product[field] !== "string" || !product[field].trim()) {
+        throw new Error(`Catalogue item ${index + 1} needs a non-empty ${field} string`);
+      }
+    }
+    const extraFields = Object.keys(product).filter((field) => !allowedFields.has(field));
+    if (extraFields.length > 0) {
+      throw new Error(
+        `Catalogue item ${index + 1} has unsupported field(s): ${extraFields.join(", ")}`,
+      );
+    }
+    if (seenIds.has(product.id)) {
+      throw new Error(`Catalogue id ${product.id} appears more than once`);
+    }
+    seenIds.add(product.id);
+    if (
+      !Array.isArray(product.tags) ||
+      product.tags.length === 0 ||
+      product.tags.some((tag) => typeof tag !== "string" || !tag.trim())
+    ) {
+      throw new Error(`Catalogue item ${index + 1} needs a non-empty array of tag strings`);
+    }
+  });
+  return catalog;
+}
+
 export function rankCatalog(catalog, catalogEmbeddings, queryEmbedding, topK) {
   if (catalog.length !== catalogEmbeddings.length) {
     throw new Error("Every catalogue item must have one embedding");

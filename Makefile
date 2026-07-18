@@ -1,10 +1,11 @@
-.PHONY: help install install-dev demo data train-retriever mine-negatives train-reranker eval serve test lint format clean
+.PHONY: help install install-dev install-all demo data train-retriever mine-negatives train-reranker eval serve test lint format clean
 
 help:
 	@echo "Neural E-Commerce Search — common tasks"
 	@echo ""
-	@echo "  install         Install runtime dependencies"
-	@echo "  install-dev     Install runtime + dev dependencies"
+	@echo "  install         Install the lightweight runtime package"
+	@echo "  install-dev     Install the lightweight package + dev tools"
+	@echo "  install-all     Install models, data, retrieval, serving + dev tools"
 	@echo "  data            Download and preprocess the ESCI dataset"
 	@echo "  train-retriever Train the bi-encoder retriever"
 	@echo "  mine-negatives  Mine hard negatives from the trained retriever"
@@ -16,11 +17,13 @@ help:
 	@echo "  format          Auto-format with black + ruff"
 
 install:
-	pip install -r requirements.txt
+	python -m pip install -e .
 
 install-dev:
-	pip install -r requirements-dev.txt
-	pip install -e .
+	python -m pip install -e ".[dev]"
+
+install-all:
+	python -m pip install -e ".[all,dev]"
 
 demo:
 	python scripts/offline_demo.py

@@ -4,6 +4,25 @@ All notable project changes should be recorded here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and releases follow
 [Semantic Versioning](https://semver.org/).
 
+## [0.3.0] - 2026-07-19
+
+### Added
+
+- `necs-validate`, a dependency-light structural preflight for TREC-style qrels
+  and run files with text and JSON reports.
+- A reusable GitHub Action that fails CI on malformed rows, duplicate returned
+  documents, and optional task metadata mismatches. Standards-compatible query
+  coverage, advisory-rank, and unjudged-document diagnostics warn by default and
+  each has an explicit strict mode.
+- Sample evaluation files and focused validator documentation.
+- Runtime validation and a published JSON Schema for remix catalogues.
+- A copyable browser-result report for low-friction independent feedback.
+
+### Changed
+
+- Made the lightweight contributor installation the default and reserved the
+  full model/data/retrieval stack for explicit full-pipeline work.
+
 ## [0.2.0] - 2026-07-19
 
 ### Added

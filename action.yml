@@ -1,0 +1,56 @@
+name: Preflight IR evaluation run
+description: Preflight TREC-style qrels/runs for malformed data, coverage differences, rank diagnostics, and task mismatches.
+author: Madhvansh Choksi
+branding:
+  icon: check-circle
+  color: blue
+inputs:
+  qrels:
+    description: Path to a TREC qrels file in the calling repository.
+    required: true
+  run:
+    description: Path to a TREC run file in the calling repository.
+    required: true
+  expected-task:
+    description: "If set, require both '# task: ...' headers to match this value."
+    required: false
+    default: ""
+  require-query-coverage:
+    description: Fail instead of warn when qrels and run query sets differ.
+    required: false
+    default: "false"
+  require-judged:
+    description: Fail instead of warn when a run document is absent from qrels.
+    required: false
+    default: "false"
+  strict-ranks:
+    description: Fail instead of warn on advisory rank-column anomalies.
+    required: false
+    default: "false"
+runs:
+  using: composite
+  steps:
+    - name: Validate retrieval run
+      shell: bash
+      env:
+        NECS_QRELS: ${{ inputs.qrels }}
+        NECS_RUN: ${{ inputs.run }}
+        NECS_EXPECTED_TASK: ${{ inputs.expected-task }}
+        NECS_REQUIRE_COVERAGE: ${{ inputs.require-query-coverage }}
+        NECS_REQUIRE_JUDGED: ${{ inputs.require-judged }}
+        NECS_STRICT_RANKS: ${{ inputs.strict-ranks }}
+      run: |
+        args=(--qrels "$NECS_QRELS" --run "$NECS_RUN")
+        if [[ -n "$NECS_EXPECTED_TASK" ]]; then
+          args+=(--expected-task "$NECS_EXPECTED_TASK")
+        fi
+        if [[ "$NECS_REQUIRE_COVERAGE" == "true" ]]; then
+          args+=(--require-query-coverage)
+        fi
+        if [[ "$NECS_REQUIRE_JUDGED" == "true" ]]; then
+          args+=(--require-judged)
+        fi
+        if [[ "$NECS_STRICT_RANKS" == "true" ]]; then
+          args+=(--strict-ranks)
+        fi
+        PYTHONPATH="$GITHUB_ACTION_PATH/src" python -m necs.validate "${args[@]}"

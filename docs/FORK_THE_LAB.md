@@ -6,7 +6,9 @@ five minutes.
 
 1. [Fork the repository](https://github.com/Madhvansh/Neural-E-Commerce-Search/fork).
 2. Replace the 20 sample products in `docs/catalog.json` with your own public,
-   non-sensitive catalogue data. Keep the same five fields.
+   non-sensitive catalogue data. Keep the same five fields. The exact contract
+   is published as [`docs/catalog.schema.json`](catalog.schema.json), and the
+   lab now reports a readable error instead of silently accepting malformed data.
 3. In the fork, enable GitHub Pages with **Deploy from a branch**, branch
    `main`, folder `/docs`.
 4. Open `/lab.html` on your Pages site and try a query.

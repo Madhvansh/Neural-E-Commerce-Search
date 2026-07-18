@@ -1,10 +1,10 @@
 [build-system]
-requires = ["setuptools>=68", "wheel"]
+requires = ["setuptools>=77", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "neural-ecommerce-search-madhvansh"
-version = "0.2.0"
+version = "0.3.0"
 description = "Two-stage retrieve-and-rank neural product search on Amazon ESCI"
 readme = "README.md"
 requires-python = ">=3.9"
@@ -87,6 +87,7 @@ Source = "https://github.com/Madhvansh/Neural-E-Commerce-Search"
 
 [project.scripts]
 necs-demo = "necs.demo:main"
+necs-validate = "necs.validate:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
