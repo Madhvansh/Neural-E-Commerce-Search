@@ -13,7 +13,10 @@ of adoption, affiliation, or endorsement by that project.
 - fixture:
   [`examples/trec_eval.rs`](https://github.com/arclabs561/rankops/blob/d2c7140e3dd46e940c2dd773d08a1c0dbe616b77/examples/trec_eval.rs)
 - fixture Git blob: `ee6803d7786596aae2e9d5b1c5dd0435db902c10`
-- fixture SHA-256: `bacde45fa7b2bc480308b92b67472ea5b5bfa806192bf5bdf45f620c4038d0cc`
+- raw fixture SHA-256 (Git blob bytes with LF line endings):
+  `3fe0cf123f0c0a0074a51ec287739f813078ee09c6b8da5d449505952476672b`
+- Windows checkout SHA-256 (CRLF line endings used for this trial):
+  `bacde45fa7b2bc480308b92b67472ea5b5bfa806192bf5bdf45f620c4038d0cc`
 - extracted qrels SHA-256: `a4678de7c675f22209f37d8421a7a5f725b6cc5218fe9e8ff6853a45486723a0`
 - extracted run SHA-256: `409564c94a8766b0ce786d441796ece34c617d212811a8d5aacfca125b41362e`
 

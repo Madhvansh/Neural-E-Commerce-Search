@@ -1,0 +1,138 @@
+name: Verify published release assets
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing GitHub Release tag to verify (for example, v0.3.1)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  published-wheel:
+    runs-on: ubuntu-latest
+    env:
+      RELEASE_TAG: ${{ github.event_name == 'release' && github.event.release.tag_name || inputs.tag }}
+
+    steps:
+      - name: Check out the exact release tag
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          ref: ${{ env.RELEASE_TAG }}
+
+      - name: Set up Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.11"
+
+      - name: Download the named release assets
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          test -n "$RELEASE_TAG"
+          assets_ready=false
+          for attempt in 1 2 3 4 5; do
+            rm -rf release-assets
+            mkdir release-assets
+            if gh release download "$RELEASE_TAG" \
+              --repo "$GITHUB_REPOSITORY" \
+              --dir release-assets \
+              && compgen -G 'release-assets/*.whl' >/dev/null \
+              && compgen -G 'release-assets/*.tar.gz' >/dev/null \
+              && compgen -G 'release-assets/*SHA256SUMS.txt' >/dev/null; then
+              assets_ready=true
+              break
+            fi
+            if [[ "$attempt" -lt 5 ]]; then
+              sleep "$((attempt * 5))"
+            fi
+          done
+          test "$assets_ready" = true
+
+      - name: Verify the published SHA-256 manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t manifests < <(find release-assets -maxdepth 1 -type f -name '*SHA256SUMS.txt' -print)
+          mapfile -t wheels < <(find release-assets -maxdepth 1 -type f -name '*.whl' -print)
+          mapfile -t sdists < <(find release-assets -maxdepth 1 -type f -name '*.tar.gz' -print)
+          test "${#manifests[@]}" -eq 1
+          test "${#wheels[@]}" -eq 1
+          test "${#sdists[@]}" -eq 1
+          python -I scripts/verify_release_manifest.py \
+            --manifest "${manifests[0]}" \
+            --artifact "${wheels[0]}" \
+            --artifact "${sdists[0]}"
+
+      - name: Install and exercise the exact published wheel
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t wheels < <(find "$GITHUB_WORKSPACE/release-assets" -maxdepth 1 -type f -name '*.whl' -print)
+          mapfile -t sdists < <(find "$GITHUB_WORKSPACE/release-assets" -maxdepth 1 -type f -name '*.tar.gz' -print)
+          test "${#wheels[@]}" -eq 1
+          test "${#sdists[@]}" -eq 1
+
+          smoke_dir="$RUNNER_TEMP/necs-release-smoke"
+          python -m venv "$smoke_dir"
+          "$smoke_dir/bin/python" -m pip install --upgrade pip
+          "$smoke_dir/bin/python" -m pip install "${wheels[0]}"
+
+          release_version="${RELEASE_TAG#v}"
+          installed_version="$("$smoke_dir/bin/python" -I -c 'import necs; print(necs.__version__)')"
+          test "$installed_version" = "$release_version"
+
+          pushd "$RUNNER_TEMP"
+          "$smoke_dir/bin/python" -m pip check
+          "$smoke_dir/bin/necs-validate" --help
+          "$smoke_dir/bin/necs-validate" \
+            --qrels "$GITHUB_WORKSPACE/examples/validation/sample.qrels" \
+            --run "$GITHUB_WORKSPACE/examples/validation/sample.run" \
+            --expected-task task1_ranking
+          if "$smoke_dir/bin/necs-validate" \
+            --qrels "$GITHUB_WORKSPACE/examples/validation/sample.qrels" \
+            --run "$GITHUB_WORKSPACE/examples/validation/sample.run" \
+            --expected-task task2_classification; then
+            echo "Expected mismatched task metadata to fail." >&2
+            exit 1
+          fi
+          popd
+
+      - name: Install and exercise the exact published source distribution
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t sdists < <(find "$GITHUB_WORKSPACE/release-assets" -maxdepth 1 -type f -name '*.tar.gz' -print)
+          test "${#sdists[@]}" -eq 1
+
+          smoke_dir="$RUNNER_TEMP/necs-sdist-smoke"
+          python -m venv "$smoke_dir"
+          "$smoke_dir/bin/python" -m pip install --upgrade pip
+          "$smoke_dir/bin/python" -m pip install "${sdists[0]}"
+
+          release_version="${RELEASE_TAG#v}"
+          installed_version="$("$smoke_dir/bin/python" -I -c 'import necs; print(necs.__version__)')"
+          test "$installed_version" = "$release_version"
+
+          pushd "$RUNNER_TEMP"
+          "$smoke_dir/bin/python" -m pip check
+          "$smoke_dir/bin/necs-validate" --help
+          "$smoke_dir/bin/necs-validate" \
+            --qrels "$GITHUB_WORKSPACE/examples/validation/sample.qrels" \
+            --run "$GITHUB_WORKSPACE/examples/validation/sample.run" \
+            --expected-task task1_ranking
+          if "$smoke_dir/bin/necs-validate" \
+            --qrels "$GITHUB_WORKSPACE/examples/validation/sample.qrels" \
+            --run "$GITHUB_WORKSPACE/examples/validation/sample.run" \
+            --expected-task task2_classification; then
+            echo "Expected mismatched task metadata to fail." >&2
+            exit 1
+          fi
+          popd
