@@ -1,0 +1,1422 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#07111f">
+    <meta
+      name="description"
+      content="Validate a TREC-style qrels/run pair in your browser. The exact neural-ecommerce-search v0.3.1 release wheel runs client-side via Pyodide. Files never leave your machine."
+    >
+    <meta property="og:title" content="Validate your TREC run in the browser — NECS">
+    <meta
+      property="og:description"
+      content="Drop a qrels and run file. The exact v0.3.1 necs-validate wheel runs in your browser via Pyodide. No uploads, no server."
+    >
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://madhvansh.github.io/Neural-E-Commerce-Search/validate.html">
+    <meta property="og:image" content="https://madhvansh.github.io/Neural-E-Commerce-Search/assets/social-preview.png">
+    <meta property="og:image:width" content="1280">
+    <meta property="og:image:height" content="640">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Validate your TREC run in the browser — NECS">
+    <meta name="twitter:description" content="The exact v0.3.1 necs-validate wheel, running client-side via Pyodide. Files never leave your machine.">
+    <meta name="twitter:image" content="https://madhvansh.github.io/Neural-E-Commerce-Search/assets/social-preview.png">
+    <title>Validate your TREC run in the browser — NECS</title>
+    <link rel="canonical" href="https://madhvansh.github.io/Neural-E-Commerce-Search/validate.html">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="preconnect" href="https://github.com" crossorigin>
+    <link rel="preconnect" href="https://release-assets.githubusercontent.com" crossorigin>
+    <link rel="stylesheet" href="./assets/lab.css">
+    <style>
+      /* Validator-specific components. Base tokens (--cyan, --danger, ...) come from lab.css :root. */
+      .hero-promo {
+        margin: 0 0 6px;
+      }
+      .hero-promo a {
+        color: var(--cyan);
+        text-decoration: none;
+        font-size: 0.9rem;
+      }
+      .hero-promo a:hover {
+        text-decoration: underline;
+      }
+
+      .validator-panel {
+        margin-top: 8px;
+      }
+
+      /* Boot / loading state */
+      .boot {
+        margin-top: 24px;
+        padding: 18px 18px 16px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: rgba(4, 13, 24, 0.5);
+      }
+      .boot.ready {
+        border-color: rgba(88, 230, 217, 0.32);
+        background: rgba(88, 230, 217, 0.05);
+      }
+      .boot.failed {
+        border-color: rgba(255, 155, 155, 0.34);
+        background: rgba(93, 29, 38, 0.2);
+      }
+      .boot-head {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 12px;
+        font-size: 0.9rem;
+        font-weight: 640;
+        color: #d7e2ee;
+      }
+      .boot-spinner {
+        width: 15px;
+        height: 15px;
+        flex: none;
+        border: 2px solid rgba(157, 176, 197, 0.3);
+        border-top-color: var(--cyan);
+        border-radius: 50%;
+        animation: boot-spin 0.8s linear infinite;
+      }
+      .boot.ready .boot-spinner,
+      .boot.failed .boot-spinner {
+        display: none;
+      }
+      @keyframes boot-spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      .boot-steps {
+        display: grid;
+        gap: 7px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+      .boot-step {
+        display: flex;
+        align-items: baseline;
+        gap: 9px;
+        color: #7f92a8;
+        font-size: 0.8rem;
+        transition: color 160ms ease;
+      }
+      .boot-step .dot {
+        width: 7px;
+        height: 7px;
+        flex: none;
+        border-radius: 50%;
+        background: rgba(157, 176, 197, 0.35);
+        transform: translateY(-1px);
+      }
+      .boot-step.active {
+        color: var(--amber);
+      }
+      .boot-step.active .dot {
+        background: var(--amber);
+        box-shadow: 0 0 0 4px rgba(255, 215, 133, 0.12);
+      }
+      .boot-step.done {
+        color: #bccbda;
+      }
+      .boot-step.done .dot {
+        background: var(--cyan);
+      }
+      .boot-step.failed {
+        color: var(--danger);
+      }
+      .boot-step.failed .dot {
+        background: var(--danger);
+      }
+      .boot-note {
+        margin: 12px 0 0;
+        color: var(--muted);
+        font-size: 0.74rem;
+        line-height: 1.55;
+      }
+      .boot-note code {
+        color: #c8d4e0;
+        font-size: 0.72rem;
+        word-break: break-all;
+      }
+      .boot-retry {
+        margin-top: 10px;
+      }
+
+      /* Drop zones */
+      .dropzones {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+        margin-top: 24px;
+      }
+      .dropzone {
+        display: grid;
+        gap: 6px;
+        padding: 22px 18px;
+        border: 1.5px dashed rgba(157, 176, 197, 0.32);
+        border-radius: 15px;
+        background: rgba(4, 13, 24, 0.42);
+        text-align: center;
+        cursor: pointer;
+        transition:
+          border-color 160ms ease,
+          background 160ms ease,
+          transform 160ms ease;
+      }
+      .dropzone:hover,
+      .dropzone:focus-visible {
+        border-color: rgba(88, 230, 217, 0.5);
+        outline: none;
+      }
+      .dropzone.dragging {
+        border-color: var(--cyan);
+        background: rgba(88, 230, 217, 0.08);
+        transform: translateY(-1px);
+      }
+      .dropzone.loaded {
+        border-style: solid;
+        border-color: rgba(88, 230, 217, 0.42);
+        background: rgba(88, 230, 217, 0.05);
+        text-align: left;
+      }
+      .dz-icon {
+        display: grid;
+        place-items: center;
+        width: 34px;
+        height: 34px;
+        margin: 0 auto 2px;
+        border-radius: 10px;
+        border: 1px solid var(--line);
+        color: var(--cyan);
+      }
+      .dropzone.loaded .dz-icon {
+        margin: 0 0 2px;
+      }
+      .dz-icon svg {
+        width: 18px;
+      }
+      .dz-role {
+        color: var(--cyan);
+        font-size: 0.7rem;
+        font-weight: 750;
+        letter-spacing: 0.11em;
+        text-transform: uppercase;
+      }
+      .dz-title {
+        font-size: 0.96rem;
+        font-weight: 640;
+        color: var(--text);
+      }
+      .dz-hint {
+        color: var(--muted);
+        font-size: 0.76rem;
+        line-height: 1.5;
+      }
+      .dz-file {
+        display: none;
+        align-items: center;
+        gap: 8px;
+        margin-top: 4px;
+        color: #cdd9e6;
+        font-size: 0.82rem;
+      }
+      .dropzone.loaded .dz-file {
+        display: flex;
+      }
+      .dropzone.loaded .dz-hint {
+        display: none;
+      }
+      .dz-file .name {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 0.78rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .dz-file .meta {
+        flex: none;
+        color: var(--muted);
+        font-size: 0.72rem;
+      }
+      .dz-clear {
+        flex: none;
+        margin-left: auto;
+        padding: 2px 7px;
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        background: transparent;
+        color: var(--muted);
+        font-size: 0.7rem;
+        cursor: pointer;
+      }
+      .dz-clear:hover {
+        color: var(--danger);
+        border-color: rgba(255, 155, 155, 0.4);
+      }
+
+      /* Options + examples */
+      .options {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px 18px;
+        margin-top: 20px;
+        padding: 15px 16px;
+        border: 1px solid var(--line);
+        border-radius: 13px;
+        background: rgba(11, 26, 44, 0.4);
+      }
+      .options-label {
+        color: var(--muted);
+        font-size: 0.74rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+      .option {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: #c4d1de;
+        font-size: 0.82rem;
+        cursor: pointer;
+      }
+      .option input {
+        width: 15px;
+        height: 15px;
+        accent-color: var(--cyan);
+        cursor: pointer;
+      }
+      .option code {
+        color: var(--muted);
+        font-size: 0.72rem;
+      }
+      .expected-task {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: #c4d1de;
+        font-size: 0.82rem;
+      }
+      .expected-task input {
+        width: 150px;
+        padding: 6px 9px;
+        border: 1px solid rgba(157, 176, 197, 0.3);
+        border-radius: 8px;
+        background: rgba(4, 13, 24, 0.6);
+        color: var(--text);
+        font-size: 0.8rem;
+      }
+      .expected-task input:focus {
+        outline: none;
+        border-color: rgba(88, 230, 217, 0.55);
+      }
+
+      .example-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        margin-top: 16px;
+        color: var(--muted);
+        font-size: 0.8rem;
+      }
+      .example-row button {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 7px 12px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: transparent;
+        color: #c3d1df;
+        font: inherit;
+        font-size: 0.8rem;
+        cursor: pointer;
+      }
+      .example-row button:hover {
+        border-color: rgba(88, 230, 217, 0.45);
+        color: var(--cyan);
+      }
+      .example-row .swatch {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+      }
+      .swatch.ok {
+        background: var(--cyan);
+      }
+      .swatch.bad {
+        background: var(--danger);
+      }
+
+      .validate-actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 14px;
+        margin-top: 22px;
+      }
+      #validate-button {
+        min-height: 50px;
+        padding: 0 30px;
+        border: 1px solid rgba(88, 230, 217, 0.75);
+        border-radius: 12px;
+        background: var(--cyan);
+        color: #041519;
+        font-size: 0.95rem;
+        font-weight: 740;
+        cursor: pointer;
+      }
+      #validate-button:hover:not(:disabled) {
+        background: #83f1e7;
+      }
+      #validate-button:disabled {
+        cursor: not-allowed;
+        opacity: 0.45;
+      }
+      .validate-hint {
+        color: var(--muted);
+        font-size: 0.78rem;
+      }
+
+      /* Report */
+      .report-section {
+        min-height: 120px;
+        margin-top: 34px;
+      }
+      .report-empty {
+        display: grid;
+        place-items: center;
+        align-content: center;
+        min-height: 150px;
+        padding: 24px;
+        border: 1px dashed rgba(157, 176, 197, 0.22);
+        border-radius: 16px;
+        color: var(--muted);
+        text-align: center;
+        font-size: 0.86rem;
+      }
+      .report-empty .big {
+        margin-bottom: 6px;
+        color: #c9d5e1;
+        font-size: 1.4rem;
+      }
+      .report-summary {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 16px 22px;
+        padding: 20px 22px;
+        border: 1px solid var(--line);
+        border-radius: 16px 16px 0 0;
+        border-bottom: none;
+      }
+      .report-summary.pass {
+        border-color: rgba(88, 230, 217, 0.4);
+        background: rgba(88, 230, 217, 0.07);
+      }
+      .report-summary.warn {
+        border-color: rgba(255, 215, 133, 0.4);
+        background: rgba(255, 215, 133, 0.06);
+      }
+      .report-summary.fail {
+        border-color: rgba(255, 155, 155, 0.42);
+        background: rgba(93, 29, 38, 0.22);
+      }
+      .verdict {
+        display: inline-flex;
+        align-items: center;
+        gap: 11px;
+        font-size: 1.35rem;
+        font-weight: 760;
+        letter-spacing: -0.01em;
+      }
+      .verdict .badge {
+        display: grid;
+        place-items: center;
+        width: 30px;
+        height: 30px;
+        border-radius: 9px;
+      }
+      .verdict .badge svg {
+        width: 18px;
+        stroke-width: 2.4;
+      }
+      .pass .verdict {
+        color: var(--cyan);
+      }
+      .pass .verdict .badge {
+        background: rgba(88, 230, 217, 0.16);
+        color: var(--cyan);
+      }
+      .warn .verdict {
+        color: var(--amber);
+      }
+      .warn .verdict .badge {
+        background: rgba(255, 215, 133, 0.16);
+        color: var(--amber);
+      }
+      .fail .verdict {
+        color: var(--danger);
+      }
+      .fail .verdict .badge {
+        background: rgba(255, 155, 155, 0.16);
+        color: var(--danger);
+      }
+      .report-counts {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-left: auto;
+      }
+      .count-chip {
+        padding: 6px 11px;
+        border: 1px solid var(--line);
+        border-radius: 9px;
+        background: rgba(4, 13, 24, 0.4);
+        color: var(--muted);
+        font-size: 0.76rem;
+        white-space: nowrap;
+      }
+      .count-chip strong {
+        color: var(--text);
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+      .count-chip.err strong {
+        color: var(--danger);
+      }
+      .count-chip.warnc strong {
+        color: var(--amber);
+      }
+
+      .report-body {
+        padding: 18px 22px 20px;
+        border: 1px solid var(--line);
+        border-top: none;
+        border-radius: 0 0 16px 16px;
+      }
+      .report-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 14px;
+      }
+      .meta-chip {
+        padding: 5px 10px;
+        border-radius: 8px;
+        background: rgba(112, 167, 255, 0.1);
+        color: #a8c7f8;
+        font-size: 0.72rem;
+      }
+      .meta-chip code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+      .issue-list {
+        display: grid;
+        gap: 10px;
+      }
+      .issue {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        gap: 12px;
+        padding: 14px 16px;
+        border: 1px solid var(--line);
+        border-left-width: 3px;
+        border-radius: 12px;
+        background: rgba(12, 28, 47, 0.55);
+        animation: result-in 300ms ease both;
+      }
+      .issue.error {
+        border-left-color: var(--danger);
+      }
+      .issue.warning {
+        border-left-color: var(--amber);
+      }
+      .issue-badge {
+        flex: none;
+        align-self: start;
+        padding: 4px 8px;
+        border-radius: 7px;
+        font-size: 0.64rem;
+        font-weight: 760;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        white-space: nowrap;
+      }
+      .issue.error .issue-badge {
+        background: rgba(255, 155, 155, 0.16);
+        color: var(--danger);
+      }
+      .issue.warning .issue-badge {
+        background: rgba(255, 215, 133, 0.16);
+        color: var(--amber);
+      }
+      .issue-main .code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 0.82rem;
+        color: #dbe6f1;
+      }
+      .issue-main .msg {
+        margin: 4px 0 0;
+        color: var(--muted);
+        font-size: 0.83rem;
+        line-height: 1.55;
+      }
+      .issue-context {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 9px;
+      }
+      .ctx-chip {
+        padding: 3px 8px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        color: #93a6bb;
+        font-size: 0.68rem;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+      .ctx-chip b {
+        color: #c3d1df;
+        font-weight: 600;
+      }
+      .clean-note {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 14px 16px;
+        border: 1px solid rgba(88, 230, 217, 0.28);
+        border-radius: 12px;
+        background: rgba(88, 230, 217, 0.05);
+        color: #bfeee7;
+        font-size: 0.86rem;
+      }
+      .clean-note svg {
+        width: 18px;
+        color: var(--cyan);
+        flex: none;
+      }
+      .report-actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 9px;
+        margin-top: 16px;
+        padding-top: 16px;
+        border-top: 1px solid var(--line);
+      }
+      .report-actions a,
+      .report-actions button {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 8px 12px;
+        border: 1px solid var(--line);
+        border-radius: 9px;
+        background: rgba(4, 13, 24, 0.42);
+        color: #c7d4e1;
+        font: inherit;
+        font-size: 0.78rem;
+        text-decoration: none;
+        cursor: pointer;
+      }
+      .report-actions a:hover,
+      .report-actions button:hover {
+        border-color: rgba(88, 230, 217, 0.45);
+        color: var(--cyan);
+      }
+      .report-actions .primary {
+        border-color: rgba(88, 230, 217, 0.6);
+        background: rgba(88, 230, 217, 0.12);
+        color: var(--cyan);
+        font-weight: 680;
+      }
+      .report-actions svg {
+        width: 15px;
+      }
+      #copy-status {
+        color: var(--cyan);
+        font-size: 0.76rem;
+      }
+
+      .no-js {
+        margin-top: 24px;
+        padding: 16px;
+        border: 1px solid rgba(255, 155, 155, 0.3);
+        border-radius: 12px;
+        background: rgba(93, 29, 38, 0.2);
+        color: #ffd0d0;
+        font-size: 0.85rem;
+      }
+
+      @media (max-width: 760px) {
+        .dropzones {
+          grid-template-columns: 1fr;
+        }
+        .report-counts {
+          margin-left: 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page-glow page-glow-one" aria-hidden="true"></div>
+    <div class="page-glow page-glow-two" aria-hidden="true"></div>
+
+    <header class="site-header">
+      <a class="brand" href="./">
+        <span class="brand-mark" aria-hidden="true">N</span>
+        <span>
+          <strong>NECS</strong>
+          <small>Run Validator</small>
+        </span>
+      </a>
+      <nav aria-label="Project links">
+        <a href="./lab.html">Browser lab</a>
+        <a href="https://github.com/Madhvansh/Neural-E-Commerce-Search">★ Star</a>
+        <a href="https://github.com/Madhvansh/Neural-E-Commerce-Search/releases/tag/v0.3.1">v0.3.1</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero">
+        <p class="hero-promo">
+          <a href="./lab.html">← Back to the neural search Browser Lab</a>
+        </p>
+        <div class="eyebrow">
+          <span class="pulse" aria-hidden="true"></span>
+          Runs locally in your browser
+        </div>
+        <h1>Validate your TREC run <span>before you trust the metrics.</span></h1>
+        <p class="hero-copy">
+          Drop a qrels file and a run file. The exact
+          <code>neural-ecommerce-search</code> v0.3.1 release wheel runs in your
+          browser through Pyodide and reports structural integrity, coverage, and
+          advisory-rank issues &mdash; the same checks as the
+          <code>necs-validate</code> CLI. Your files never leave your machine.
+        </p>
+
+        <div class="trust-row" aria-label="Validator properties">
+          <span>Client-side Python</span>
+          <span>No uploads, no server</span>
+          <span>Exact v0.3.1 wheel</span>
+          <span>Pyodide + micropip</span>
+        </div>
+      </section>
+
+      <section class="search-panel validator-panel" aria-labelledby="validator-title">
+        <div class="panel-heading">
+          <div>
+            <p class="section-kicker">Validate a run</p>
+            <h2 id="validator-title">Two files in, one honest report out.</h2>
+          </div>
+          <div id="engine-status" class="model-status" role="status" aria-live="polite">
+            <span class="status-dot" aria-hidden="true"></span>
+            Booting the validator&hellip;
+          </div>
+        </div>
+
+        <noscript>
+          <div class="no-js">
+            This validator runs Python in your browser and needs JavaScript
+            enabled. With JavaScript off, use the
+            <code>necs-validate</code> CLI instead &mdash; see the
+            <a href="https://github.com/Madhvansh/Neural-E-Commerce-Search/blob/main/docs/validation.md">validator guide</a>.
+          </div>
+        </noscript>
+
+        <div id="boot" class="boot" aria-live="polite">
+          <div class="boot-head">
+            <span class="boot-spinner" aria-hidden="true"></span>
+            <span id="boot-title">Starting the in-browser Python engine&hellip;</span>
+          </div>
+          <ol class="boot-steps">
+            <li class="boot-step" data-step="pyodide">
+              <span class="dot" aria-hidden="true"></span>
+              <span>Download the Pyodide runtime from jsDelivr (~10&nbsp;MB, cached after first visit)</span>
+            </li>
+            <li class="boot-step" data-step="micropip">
+              <span class="dot" aria-hidden="true"></span>
+              <span>Start Python and load <code>micropip</code></span>
+            </li>
+            <li class="boot-step" data-step="wheel">
+              <span class="dot" aria-hidden="true"></span>
+              <span>Install the exact v0.3.1 <code>necs-validate</code> release wheel</span>
+            </li>
+          </ol>
+          <p class="boot-note" id="boot-note">
+            First boot takes roughly 5&ndash;10 seconds. Everything below runs on
+            your device; no qrels, run, or report is ever uploaded.
+          </p>
+          <div class="boot-retry" hidden>
+            <button type="button" id="boot-retry-btn" class="button-secondary">Retry boot</button>
+          </div>
+        </div>
+
+        <div class="dropzones">
+          <div
+            class="dropzone"
+            id="dz-qrels"
+            role="button"
+            tabindex="0"
+            aria-label="Qrels file drop zone. Click to browse or drag a file here."
+          >
+            <span class="dz-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M12 3v12m0 0-4-4m4 4 4-4M5 21h14"></path></svg>
+            </span>
+            <span class="dz-role">Qrels file</span>
+            <span class="dz-title">Relevance judgements</span>
+            <span class="dz-hint">
+              <code>query_id&nbsp;iteration&nbsp;document_id&nbsp;relevance</code><br>
+              Drag &amp; drop or click to browse
+            </span>
+            <span class="dz-file">
+              <span class="name" data-name></span>
+              <span class="meta" data-meta></span>
+              <button type="button" class="dz-clear" data-clear aria-label="Remove qrels file">clear</button>
+            </span>
+            <input type="file" hidden data-input accept=".qrels,.txt,.tsv,.trec,text/plain,*/*">
+          </div>
+
+          <div
+            class="dropzone"
+            id="dz-run"
+            role="button"
+            tabindex="0"
+            aria-label="Run file drop zone. Click to browse or drag a file here."
+          >
+            <span class="dz-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M12 3v12m0 0-4-4m4 4 4-4M5 21h14"></path></svg>
+            </span>
+            <span class="dz-role">Run file</span>
+            <span class="dz-title">Ranked results</span>
+            <span class="dz-hint">
+              <code>query_id&nbsp;Q0&nbsp;document_id&nbsp;rank&nbsp;score&nbsp;run_tag</code><br>
+              Drag &amp; drop or click to browse
+            </span>
+            <span class="dz-file">
+              <span class="name" data-name></span>
+              <span class="meta" data-meta></span>
+              <button type="button" class="dz-clear" data-clear aria-label="Remove run file">clear</button>
+            </span>
+            <input type="file" hidden data-input accept=".run,.txt,.tsv,.trec,text/plain,*/*">
+          </div>
+        </div>
+
+        <div class="options">
+          <span class="options-label">Strict contracts</span>
+          <label class="option">
+            <input type="checkbox" id="opt-coverage">
+            <span>Require query coverage <code>--require-query-coverage</code></span>
+          </label>
+          <label class="option">
+            <input type="checkbox" id="opt-judged">
+            <span>Require judged documents <code>--require-judged</code></span>
+          </label>
+          <label class="option">
+            <input type="checkbox" id="opt-ranks">
+            <span>Strict ranks <code>--strict-ranks</code></span>
+          </label>
+          <label class="expected-task">
+            <span>Expected task</span>
+            <input type="text" id="opt-task" placeholder="e.g. task1_ranking" autocomplete="off" spellcheck="false">
+          </label>
+        </div>
+
+        <div class="example-row">
+          <span>No files handy? Try:</span>
+          <button type="button" id="example-valid">
+            <span class="swatch ok" aria-hidden="true"></span>
+            Load a valid example
+          </button>
+          <button type="button" id="example-broken">
+            <span class="swatch bad" aria-hidden="true"></span>
+            Load a broken example
+          </button>
+        </div>
+
+        <div class="validate-actions">
+          <button type="button" id="validate-button" disabled>Validate</button>
+          <span class="validate-hint" id="validate-hint">Waiting for the validator to finish loading&hellip;</span>
+        </div>
+      </section>
+
+      <section class="report-section" aria-labelledby="report-title" aria-live="polite">
+        <h2 id="report-title" class="sr-only">Validation report</h2>
+        <div id="report">
+          <div class="report-empty">
+            <div class="big" aria-hidden="true">&#9678;</div>
+            <strong>Your report will appear here.</strong>
+            <p>Load two files (or an example) and press Validate.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="pipeline" aria-label="How it works">
+        <article>
+          <span class="stage-number">01</span>
+          <div>
+            <strong>Drop</strong>
+            <p>Your qrels and run files are read into memory in the page. Nothing is uploaded.</p>
+          </div>
+        </article>
+        <span class="pipeline-arrow" aria-hidden="true">&rarr;</span>
+        <article>
+          <span class="stage-number">02</span>
+          <div>
+            <strong>Run the wheel</strong>
+            <p>Pyodide calls <code>necs.validate.validate_files</code> from the real v0.3.1 release.</p>
+          </div>
+        </article>
+        <span class="pipeline-arrow" aria-hidden="true">&rarr;</span>
+        <article>
+          <span class="stage-number">03</span>
+          <div>
+            <strong>Read the report</strong>
+            <p>Pass, warn, or fail per issue &mdash; copyable as Markdown to share.</p>
+          </div>
+        </article>
+      </section>
+
+      <section class="evidence-note">
+        <div>
+          <p class="section-kicker">Evidence boundary</p>
+          <h2>A real preflight, with a precise claim.</h2>
+        </div>
+        <p>
+          This page runs the byte-identical v0.3.1 release wheel
+          (SHA-256 <code>ffb2b2f4&hellip;</code>) in your browser via
+          <a href="https://pyodide.org/">Pyodide</a>. It performs the same
+          structural preflight as the <code>necs-validate</code> CLI: malformed
+          rows, non-finite values, duplicate judgements or returned documents,
+          query coverage, advisory-rank anomalies, unjudged documents, and
+          optional <code>#&nbsp;task:</code> headers. It is <em>not</em>
+          byte-for-byte NIST input certification, and a passing report does not
+          establish dataset provenance, correct gains, model quality, or a sound
+          experimental design. The CLI remains the canonical entry point; this is
+          the same code, made click-to-run. No analytics, no tracking, no uploads.
+        </p>
+      </section>
+
+      <section class="cta">
+        <div>
+          <p class="section-kicker">Trust, but verify</p>
+          <h2>Found a false positive?</h2>
+          <p>
+            If the validator flags something it should accept &mdash; or misses
+            something it should catch &mdash; that is a bug worth a report.
+            Compatibility evidence from real runs is welcome.
+          </p>
+        </div>
+        <div class="cta-actions">
+          <a class="button-primary" href="https://github.com/Madhvansh/Neural-E-Commerce-Search/issues/new?template=validator_report.yml">
+            Open an issue
+          </a>
+          <a class="button-secondary" href="https://github.com/Madhvansh/Neural-E-Commerce-Search/blob/main/docs/validation.md">
+            Read the validator guide
+          </a>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <span>MIT licensed &middot; Runs the exact v0.3.1 release &middot; No uploads, no analytics</span>
+      <a href="https://github.com/Madhvansh/Neural-E-Commerce-Search">Source on GitHub</a>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
+    <script>
+      (function () {
+        "use strict";
+
+        var PYODIDE_INDEX = "https://cdn.jsdelivr.net/pyodide/v0.26.4/full/";
+        var WHEEL_NAME = "neural_ecommerce_search_madhvansh-0.3.1-py3-none-any.whl";
+        // The canonical release asset lives at
+        // github.com/Madhvansh/Neural-E-Commerce-Search/releases/download/v0.3.1/<wheel>,
+        // but GitHub's release-asset host sends no Access-Control-Allow-Origin
+        // header, so a browser cannot fetch it cross-origin. We serve a
+        // byte-identical copy same-origin (verified by SHA-256 against the
+        // release checksums) so the exact release wheel still runs in-browser.
+        var MIRROR_WHEEL_URL = new URL("./assets/" + WHEEL_NAME, location.href).href;
+        var RELEASE_URL = "https://github.com/Madhvansh/Neural-E-Commerce-Search/releases/tag/v0.3.1";
+        var REPO_URL = "https://github.com/Madhvansh/Neural-E-Commerce-Search";
+        var ISSUE_URL = REPO_URL + "/issues/new?template=validator_report.yml";
+
+        // ---- Bundled examples (the two "try it" files) -------------------------
+        var EXAMPLES = {
+          valid: {
+            qrelsName: "valid.qrels",
+            runName: "valid.run",
+            qrels:
+              "# task: task1_ranking\n" +
+              "q1 0 mouse-wireless 3\n" +
+              "q1 0 mouse-wired 1\n" +
+              "q2 0 laptop-stand 3\n" +
+              "q2 0 usb-hub 1\n",
+            run:
+              "# task: task1_ranking\n" +
+              "q1 Q0 mouse-wireless 1 0.91 sample\n" +
+              "q1 Q0 mouse-wired 2 0.42 sample\n" +
+              "q2 Q0 laptop-stand 1 0.88 sample\n" +
+              "q2 Q0 usb-hub 2 0.39 sample\n"
+          },
+          broken: {
+            qrelsName: "broken.qrels",
+            runName: "broken.run",
+            qrels:
+              "# task: task1_ranking\n" +
+              "q1 0 mouse-wireless 3\n" +
+              "q1 0 mouse-wired 1\n" +
+              "q2 0 laptop-stand 3\n" +
+              "q2 0 usb-hub 1\n" +
+              "q3 0 monitor-4k 2\n",
+            run:
+              "# task: task2_reranking\n" +
+              "q1 Q0 mouse-wireless 1 0.91 broken\n" +
+              "q1 Q0 mouse-wired 2 high broken\n" +
+              "q1 Q0 mouse-wireless 3 0.40 broken\n" +
+              "q2 Q0 laptop-stand 1 0.88 broken\n" +
+              "q2 Q0 unknown-widget 2 0.50 broken\n"
+          }
+        };
+
+        // ---- State -------------------------------------------------------------
+        var pyodide = null;
+        var pyValidate = null;
+        var pyReady = false;
+        var necsVersion = "0.3.1";
+        var wheelSource = "";
+        var files = {
+          qrels: { text: null, name: null },
+          run: { text: null, name: null }
+        };
+
+        // ---- Small DOM helpers -------------------------------------------------
+        function $(id) { return document.getElementById(id); }
+        function esc(s) {
+          return String(s).replace(/[&<>"']/g, function (c) {
+            return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+          });
+        }
+        function setStep(name, state) {
+          var el = document.querySelector('.boot-step[data-step="' + name + '"]');
+          if (el) el.className = "boot-step " + state;
+        }
+        function setEngineStatus(text, cls) {
+          var s = $("engine-status");
+          s.className = "model-status" + (cls ? " " + cls : "");
+          s.lastChild.textContent = " " + text;
+        }
+
+        // ---- Boot Pyodide + install the wheel ---------------------------------
+        async function installWheel() {
+          // Install the exact v0.3.1 release wheel. It is served same-origin
+          // (docs/assets) because GitHub's release-asset host does not send an
+          // Access-Control-Allow-Origin header, so browsers cannot fetch it
+          // cross-origin. This mirror is byte-identical to the release asset
+          // (SHA-256 ffb2b2f4…, verified against the release checksums). Run the
+          // install in Python so deps=False is honoured — necs.validate is
+          // stdlib-only, so numpy/PyYAML are never needed.
+          pyodide.globals.set("NECS_WHEEL_URL", MIRROR_WHEEL_URL);
+          await pyodide.runPythonAsync(
+            "import micropip\n" +
+            "await micropip.install(NECS_WHEEL_URL, deps=False)\n"
+          );
+          wheelSource = "the exact v0.3.1 release wheel (mirrored same-origin — GitHub's release host omits CORS headers)";
+        }
+
+        async function boot() {
+          var bootEl = $("boot");
+          var retryWrap = document.querySelector(".boot-retry");
+          bootEl.className = "boot";
+          retryWrap.hidden = true;
+          setEngineStatus("Booting the validator…", "");
+          try {
+            setStep("pyodide", "active");
+            $("boot-title").textContent = "Downloading the Pyodide runtime…";
+            pyodide = await loadPyodide({ indexURL: PYODIDE_INDEX });
+            setStep("pyodide", "done");
+
+            setStep("micropip", "active");
+            $("boot-title").textContent = "Starting Python and loading micropip…";
+            await pyodide.loadPackage("micropip");
+            setStep("micropip", "done");
+
+            setStep("wheel", "active");
+            $("boot-title").textContent = "Installing the exact v0.3.1 release wheel…";
+            await installWheel();
+            setStep("wheel", "done");
+
+            // Define the programmatic bridge into necs.validate.
+            necsVersion = await pyodide.runPythonAsync(
+              [
+                "import json, os, tempfile",
+                "import necs",
+                "from necs.validate import validate_files",
+                "",
+                "def _necs_validate(qrels_text, run_text, qrels_name, run_name,",
+                "                   require_query_coverage, require_judged, strict_ranks, expected_task):",
+                "    d = tempfile.mkdtemp()",
+                "    qp = os.path.join(d, 'qrels')",
+                "    rp = os.path.join(d, 'run')",
+                "    with open(qp, 'w', encoding='utf-8') as fh:",
+                "        fh.write(qrels_text)",
+                "    with open(rp, 'w', encoding='utf-8') as fh:",
+                "        fh.write(run_text)",
+                "    report = validate_files(",
+                "        qp, rp,",
+                "        require_query_coverage=bool(require_query_coverage),",
+                "        require_judged=bool(require_judged),",
+                "        strict_ranks=bool(strict_ranks),",
+                "        expected_task=(expected_task or None),",
+                "    )",
+                "    data = report.to_dict()",
+                "    labels = {qp: (qrels_name or 'qrels'), rp: (run_name or 'run')}",
+                "    data['qrels_path'] = labels.get(data['qrels_path'], data['qrels_path'])",
+                "    data['run_path'] = labels.get(data['run_path'], data['run_path'])",
+                "    for issue in data['issues']:",
+                "        if issue.get('file') in labels:",
+                "            issue['file'] = labels[issue['file']]",
+                "    data['necs_version'] = necs.__version__",
+                "    return json.dumps(data)",
+                "",
+                "necs.__version__",
+              ].join("\n")
+            );
+
+            pyValidate = pyodide.globals.get("_necs_validate");
+
+            pyReady = true;
+            bootEl.className = "boot ready";
+            $("boot-title").textContent =
+              "Ready — necs-validate v" + necsVersion + " is running in your browser.";
+            $("boot-note").innerHTML =
+              "Running " + esc(wheelSource) +
+              ". No qrels, run, or report ever leaves your device.";
+            setEngineStatus("Validator ready (v" + necsVersion + ")", "ready");
+            refreshValidateState();
+          } catch (err) {
+            console.error("Validator boot failed:", err);
+            var active = document.querySelector(".boot-step.active");
+            if (active) active.className = "boot-step failed";
+            bootEl.className = "boot failed";
+            $("boot-title").textContent = "The in-browser validator failed to load.";
+            $("boot-note").innerHTML =
+              "Error: <code>" + esc(String(err && err.message ? err.message : err)) +
+              "</code>. This page depends on the jsDelivr CDN for Pyodide and on the " +
+              "release wheel. You can retry, or use the " +
+              '<a href="' + esc(REPO_URL) + '/blob/main/docs/validation.md">necs-validate CLI</a> instead.';
+            retryWrap.hidden = false;
+            setEngineStatus("Validator failed to load", "error");
+          }
+        }
+
+        // ---- Drop zones --------------------------------------------------------
+        function humanSize(n) {
+          if (n < 1024) return n + " B";
+          return (n / 1024).toFixed(1) + " KB";
+        }
+        function lineCount(text) {
+          var t = text.replace(/\n$/, "");
+          return t.length ? t.split("\n").length : 0;
+        }
+        function setFile(kind, name, text) {
+          files[kind].name = name;
+          files[kind].text = text;
+          var dz = $(kind === "qrels" ? "dz-qrels" : "dz-run");
+          dz.classList.add("loaded");
+          dz.querySelector("[data-name]").textContent = name;
+          dz.querySelector("[data-meta]").textContent =
+            humanSize(text.length) + " · " + lineCount(text) + " lines";
+          refreshValidateState();
+        }
+        function clearFile(kind) {
+          files[kind].name = null;
+          files[kind].text = null;
+          var dz = $(kind === "qrels" ? "dz-qrels" : "dz-run");
+          dz.classList.remove("loaded");
+          dz.querySelector("[data-input]").value = "";
+          refreshValidateState();
+        }
+        function readFileInto(kind, file) {
+          if (!file) return;
+          var reader = new FileReader();
+          reader.onload = function () { setFile(kind, file.name, String(reader.result)); };
+          reader.onerror = function () { alert("Could not read " + file.name); };
+          reader.readAsText(file);
+        }
+        function wireDropzone(kind) {
+          var dz = $(kind === "qrels" ? "dz-qrels" : "dz-run");
+          var input = dz.querySelector("[data-input]");
+          dz.addEventListener("click", function (e) {
+            if (e.target.closest("[data-clear]")) return;
+            input.click();
+          });
+          dz.addEventListener("keydown", function (e) {
+            if (e.key === "Enter" || e.key === " ") { e.preventDefault(); input.click(); }
+          });
+          input.addEventListener("change", function () {
+            if (input.files && input.files[0]) readFileInto(kind, input.files[0]);
+          });
+          dz.querySelector("[data-clear]").addEventListener("click", function (e) {
+            e.stopPropagation();
+            clearFile(kind);
+          });
+          ["dragenter", "dragover"].forEach(function (ev) {
+            dz.addEventListener(ev, function (e) {
+              e.preventDefault();
+              dz.classList.add("dragging");
+            });
+          });
+          ["dragleave", "dragend"].forEach(function (ev) {
+            dz.addEventListener(ev, function (e) {
+              e.preventDefault();
+              if (ev === "dragleave" && dz.contains(e.relatedTarget)) return;
+              dz.classList.remove("dragging");
+            });
+          });
+          dz.addEventListener("drop", function (e) {
+            e.preventDefault();
+            dz.classList.remove("dragging");
+            if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
+              readFileInto(kind, e.dataTransfer.files[0]);
+            }
+          });
+        }
+
+        // ---- Validate button state --------------------------------------------
+        function refreshValidateState() {
+          var btn = $("validate-button");
+          var hint = $("validate-hint");
+          var haveFiles = !!(files.qrels.text && files.run.text);
+          btn.disabled = !(pyReady && haveFiles);
+          if (!pyReady) {
+            hint.textContent = "Waiting for the validator to finish loading…";
+          } else if (!files.qrels.text && !files.run.text) {
+            hint.textContent = "Add a qrels file and a run file to begin.";
+          } else if (!files.qrels.text) {
+            hint.textContent = "Add a qrels file.";
+          } else if (!files.run.text) {
+            hint.textContent = "Add a run file.";
+          } else {
+            hint.textContent = "Ready to validate on your device.";
+          }
+        }
+
+        // ---- Run validation ----------------------------------------------------
+        var lastReport = null;
+        function runValidation() {
+          if (!pyReady || !files.qrels.text || !files.run.text) return;
+          var btn = $("validate-button");
+          btn.disabled = true;
+          var prev = btn.textContent;
+          btn.textContent = "Validating…";
+          // Let the button repaint before the (fast) synchronous call.
+          setTimeout(function () {
+            try {
+              var json = pyValidate(
+                files.qrels.text,
+                files.run.text,
+                files.qrels.name || "qrels",
+                files.run.name || "run",
+                $("opt-coverage").checked,
+                $("opt-judged").checked,
+                $("opt-ranks").checked,
+                $("opt-task").value.trim()
+              );
+              lastReport = JSON.parse(json);
+              renderReport(lastReport);
+            } catch (err) {
+              console.error("Validation failed:", err);
+              $("report").innerHTML =
+                '<div class="report-empty" style="border-color:rgba(255,155,155,.34);color:#ffd0d0">' +
+                "<strong>The validator raised an error.</strong><p>" +
+                esc(String(err && err.message ? err.message : err)) + "</p></div>";
+            } finally {
+              btn.textContent = prev;
+              refreshValidateState();
+            }
+          }, 20);
+        }
+
+        // ---- Render report -----------------------------------------------------
+        var CHECK_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 13 4 4L19 7"></path></svg>';
+        var WARN_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 9v4m0 4h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"></path></svg>';
+        var CROSS_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"></path></svg>';
+        var COPY_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 9h10v10H9zM5 15H4V5h10v1"></path></svg>';
+        var LINK_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1m-1 8a5 5 0 0 1-7 0 5 5 0 0 1 0-7l2-2a5 5 0 0 1 7 0"></path></svg>';
+
+        function ctxChips(issue) {
+          var chips = [];
+          if (issue.file) chips.push('<span class="ctx-chip"><b>' + esc(issue.file) + "</b></span>");
+          if (issue.line != null) chips.push('<span class="ctx-chip">line <b>' + esc(issue.line) + "</b></span>");
+          if (issue.query_id) chips.push('<span class="ctx-chip">query <b>' + esc(issue.query_id) + "</b></span>");
+          if (issue.document_id) chips.push('<span class="ctx-chip">doc <b>' + esc(issue.document_id) + "</b></span>");
+          return chips.length ? '<div class="issue-context">' + chips.join("") + "</div>" : "";
+        }
+
+        function renderReport(rep) {
+          var counts = rep.counts;
+          var nErr = counts.errors;
+          var nWarn = counts.warnings;
+          var state = !rep.ok ? "fail" : (nWarn > 0 ? "warn" : "pass");
+          var verdictText = !rep.ok ? "FAIL" : (nWarn > 0 ? "PASS (with warnings)" : "PASS");
+          var badge = !rep.ok ? CROSS_SVG : (nWarn > 0 ? WARN_SVG : CHECK_SVG);
+
+          var html = "";
+          html += '<div class="report-summary ' + state + '">';
+          html += '<span class="verdict"><span class="badge">' + badge + "</span>" + verdictText + "</span>";
+          html += '<div class="report-counts">';
+          html += '<span class="count-chip">qrels <strong>' + counts.qrels_queries + "</strong> q / <strong>" +
+            counts.qrels_judgements + "</strong> judged</span>";
+          html += '<span class="count-chip">run <strong>' + counts.run_queries + "</strong> q / <strong>" +
+            counts.run_entries + "</strong> rows</span>";
+          html += '<span class="count-chip err">errors <strong>' + nErr + "</strong></span>";
+          html += '<span class="count-chip warnc">warnings <strong>' + nWarn + "</strong></span>";
+          html += "</div></div>";
+
+          html += '<div class="report-body">';
+
+          var metaChips = [];
+          if (rep.metadata && rep.metadata.qrels && rep.metadata.qrels.task) {
+            metaChips.push('<span class="meta-chip">qrels task <code>' + esc(rep.metadata.qrels.task) + "</code></span>");
+          }
+          if (rep.metadata && rep.metadata.run && rep.metadata.run.task) {
+            metaChips.push('<span class="meta-chip">run task <code>' + esc(rep.metadata.run.task) + "</code></span>");
+          }
+          metaChips.push('<span class="meta-chip">necs-validate <code>v' + esc(rep.necs_version || necsVersion) + "</code></span>");
+          html += '<div class="report-meta">' + metaChips.join("") + "</div>";
+
+          if (rep.issues.length === 0) {
+            html += '<div class="clean-note">' + CHECK_SVG +
+              "<span>No structural issues found. Files are internally consistent for the selected contract.</span></div>";
+          } else {
+            html += '<div class="issue-list">';
+            // errors first, then warnings, preserving original order within each.
+            var sevRank = function (s) { return s === "error" ? 0 : s === "warning" ? 1 : 2; };
+            var ordered = rep.issues
+              .map(function (it, idx) { return { it: it, idx: idx }; })
+              .sort(function (a, b) {
+                return sevRank(a.it.severity) - sevRank(b.it.severity) || a.idx - b.idx;
+              })
+              .map(function (w) { return w.it; });
+            ordered.forEach(function (issue) {
+              html += '<div class="issue ' + esc(issue.severity) + '">';
+              html += '<span class="issue-badge">' + esc(issue.severity) + "</span>";
+              html += '<div class="issue-main"><span class="code">' + esc(issue.code) + "</span>";
+              html += '<p class="msg">' + esc(issue.message) + "</p>";
+              html += ctxChips(issue);
+              html += "</div></div>";
+            });
+            html += "</div>";
+          }
+
+          html += '<div class="report-actions">';
+          html += '<button type="button" id="copy-md" class="primary">' + COPY_SVG + "Copy report as Markdown</button>";
+          html += '<a href="' + esc(RELEASE_URL) + '">' + LINK_SVG + "View the v0.3.1 release</a>";
+          html += '<a href="' + esc(ISSUE_URL) + '">' + WARN_SVG + "Found a false positive? Open an issue</a>";
+          html += '<span id="copy-status" role="status" aria-live="polite"></span>';
+          html += "</div>";
+
+          html += "</div>";
+          $("report").innerHTML = html;
+
+          $("copy-md").addEventListener("click", function () { copyMarkdown(rep); });
+          $("report").scrollIntoView({ behavior: "smooth", block: "nearest" });
+        }
+
+        // ---- Copy as Markdown (the shareable surface) -------------------------
+        function reportMarkdown(rep) {
+          var c = rep.counts;
+          var verdict = !rep.ok ? "FAIL" : (c.warnings > 0 ? "PASS (with warnings)" : "PASS");
+          var lines = [];
+          lines.push("## NECS run validation — " + verdict);
+          lines.push("");
+          lines.push("_Validated in-browser with the exact `neural-ecommerce-search` v" +
+            (rep.necs_version || necsVersion) + " release wheel via Pyodide._");
+          lines.push("");
+          lines.push("- **qrels** `" + rep.qrels_path + "` — " + c.qrels_queries +
+            " queries, " + c.qrels_judgements + " judgements");
+          lines.push("- **run** `" + rep.run_path + "` — " + c.run_queries +
+            " queries, " + c.run_entries + " rows");
+          lines.push("- **result** — " + c.errors + " error(s), " + c.warnings + " warning(s)");
+          lines.push("");
+          if (rep.issues.length) {
+            lines.push("| Severity | Code | Where | Detail |");
+            lines.push("|---|---|---|---|");
+            rep.issues.forEach(function (i) {
+              var where = [];
+              if (i.file) where.push(i.file);
+              if (i.line != null) where.push("line " + i.line);
+              if (i.query_id) where.push("q=" + i.query_id);
+              if (i.document_id) where.push("doc=" + i.document_id);
+              var detail = String(i.message).replace(/\|/g, "\\|");
+              lines.push("| " + i.severity.toUpperCase() + " | `" + i.code + "` | " +
+                (where.join(", ") || "—") + " | " + detail + " |");
+            });
+            lines.push("");
+          }
+          lines.push("Validator: " + location.href.split("#")[0]);
+          lines.push("Release: " + RELEASE_URL);
+          return lines.join("\n");
+        }
+        function copyMarkdown(rep) {
+          var md = reportMarkdown(rep);
+          var status = $("copy-status");
+          function ok() { if (status) { status.textContent = "Copied!"; setTimeout(function () { status.textContent = ""; }, 2200); } }
+          function fail() { if (status) status.textContent = "Copy failed — select the text manually."; }
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(md).then(ok, function () { legacyCopy(md, ok, fail); });
+          } else {
+            legacyCopy(md, ok, fail);
+          }
+        }
+        function legacyCopy(text, ok, fail) {
+          try {
+            var ta = document.createElement("textarea");
+            ta.value = text;
+            ta.style.position = "fixed";
+            ta.style.opacity = "0";
+            document.body.appendChild(ta);
+            ta.select();
+            var done = document.execCommand("copy");
+            document.body.removeChild(ta);
+            done ? ok() : fail();
+          } catch (e) { fail(); }
+        }
+
+        // ---- Examples ----------------------------------------------------------
+        function loadExample(which) {
+          var ex = EXAMPLES[which];
+          if (!ex) return;
+          if ($("opt-task")) $("opt-task").value = "";
+          setFile("qrels", ex.qrelsName, ex.qrels);
+          setFile("run", ex.runName, ex.run);
+          if (pyReady) {
+            runValidation();
+          } else {
+            $("validate-hint").textContent =
+              "Example loaded — it will validate as soon as the engine finishes booting…";
+          }
+        }
+
+        // ---- Wire up -----------------------------------------------------------
+        document.addEventListener("DOMContentLoaded", function () {
+          wireDropzone("qrels");
+          wireDropzone("run");
+          $("validate-button").addEventListener("click", runValidation);
+          $("example-valid").addEventListener("click", function () { loadExample("valid"); });
+          $("example-broken").addEventListener("click", function () { loadExample("broken"); });
+          $("boot-retry-btn").addEventListener("click", boot);
+          refreshValidateState();
+          boot();
+        });
+      })();
+    </script>
+  </body>
+</html>

@@ -22,6 +22,14 @@ The lab is a real dense-retrieval demonstration, but it is not the repository's
 unreleased ESCI-trained bi-encoder/cross-encoder pipeline and does not reproduce
 historical benchmark figures.
 
+## Validate a run in the browser
+
+The [in-browser run validator](validate.html) runs the exact v0.3.1
+`necs-validate` release wheel client-side through Pyodide. Drop a TREC-style
+qrels and run file — or load a bundled valid/broken example — for a pass/warn/fail
+report with no install, no server, and no uploads. It is the same structural
+preflight as the [`necs-validate` CLI](validation.md), made click-to-run.
+
 ## Start without data or models
 
 From a source checkout, run the deterministic synthetic demo:
@@ -50,6 +58,7 @@ metrics are withdrawn pending a corrected rerun. Read [Experiments](experiments.
 - [Reproducibility](reproducibility.md): publication checklist
 - [Deployment](deployment.md): serving and operational caveats
 - [Browser lab](lab.html): client-side MiniLM retrieval demo
+- [Browser validator](validate.html): drop-in TREC run validation via Pyodide
 - [Releasing](releasing.md): package and release safety checks
 
 ## Links
