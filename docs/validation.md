@@ -128,3 +128,9 @@ caught through the [validator compatibility report](https://github.com/Madhvansh
 
 Each report distinguishes maintainer-run compatibility testing from downstream
 adoption or upstream endorsement.
+
+## Further reading
+
+- [The TREC rank column is advisory](articles/trec-rank-advisory.md) — why
+  zero-based ranks, pooled judgments, and partial query coverage set the default
+  behavior of this preflight, and what it still fails on.
