@@ -1,0 +1,12 @@
+{
+  "artifact": "tests/unit/test_adapters.py TREC fixture plus API round trip",
+  "trials": [
+    {"errors": 0, "exit_code": 0, "id": "bm25-default", "ok": true, "warnings": 2},
+    {"errors": 0, "exit_code": 0, "id": "reranker-default", "ok": true, "warnings": 2},
+    {"errors": 0, "exit_code": 0, "id": "api-roundtrip-default", "ok": true, "warnings": 1},
+    {"errors": 0, "exit_code": 0, "id": "api-roundtrip-strict-ranks", "ok": true, "warnings": 1},
+    {"errors": 1, "exit_code": 1, "expected_nonzero": true, "id": "api-roundtrip-full-strict", "ok": false, "warnings": 0}
+  ],
+  "upstream_commit": "889778fd030fd4e1d1a370a1b2a465ad8d11c480",
+  "validator_version": "0.3.0"
+}

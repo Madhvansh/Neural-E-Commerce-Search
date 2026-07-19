@@ -100,6 +100,9 @@ caught through the [validator compatibility report](https://github.com/Madhvansh
 
 ## Published compatibility evidence
 
+- [v0.3.0 compatibility matrix](compatibility/matrix-v030.md) — pinned
+  `neural-search`, `rankops`, and RankFlow fixtures plus a RankFlow API round
+  trip, with immutable provenance and machine-readable summaries.
 - [`neural-search` fixture trial](compatibility/neural-search-v030.md) — an
   exact public qrels/run pair at a pinned upstream commit passes the default
   contract with one unjudged-document warning; `--require-judged` promotes the

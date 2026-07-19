@@ -273,7 +273,7 @@ results/           schema and instructions for future result bundles
 | [Deployment](docs/deployment.md) | API, Docker, and operational caveats |
 | [Browser lab](https://madhvansh.github.io/Neural-E-Commerce-Search/lab.html) | No-login client-side neural retrieval |
 | [Run validator](docs/validation.md) | Reusable CLI and GitHub Action for TREC evaluation integrity |
-| [Compatibility evidence](docs/compatibility/neural-search-v030.md) | Pinned upstream-fixture trial with machine-readable output |
+| [Compatibility evidence](docs/compatibility/matrix-v030.md) | Pinned cross-ecosystem trials with machine-readable output |
 | [Releasing](docs/releasing.md) | Package-name and release safety checks |
 | [Roadmap](ROADMAP.md) | Evidence-first milestones |
 
