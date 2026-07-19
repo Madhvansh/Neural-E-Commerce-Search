@@ -150,7 +150,8 @@ What is verified in this repository today:
 
 - Lightweight unit tests exercise preprocessing, configuration, metrics,
   hard-negative selection, pipeline orchestration, and the offline demo.
-- CI runs the lightweight suite and Ruff on Python 3.9 and 3.11.
+- CI runs the lightweight suite and Ruff on every Python version from 3.9
+  through 3.14.
 - The browser lab runs genuine client-side MiniLM embeddings over synthetic
   catalogue text and exposes the model and similarity scores.
 - The demo is deterministic, synthetic, model-free, and safe to run offline.
