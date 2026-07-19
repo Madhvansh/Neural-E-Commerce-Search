@@ -15,10 +15,10 @@ jobs:
         python-version: ["3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
@@ -49,10 +49,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with:
           python-version: "3.11"
           cache: pip
@@ -60,28 +60,99 @@ jobs:
       - name: Build wheel and source distribution
         run: |
           python -m pip install --upgrade pip
-          python -m pip install build
+          python -m pip install build twine
           python -m build
+          python -m twine check dist/*
 
       - name: Install and run the built wheel in a clean environment
+        shell: bash
         run: |
-          python -m venv .venv-smoke
-          .venv-smoke/bin/python -m pip install dist/*.whl
-          .venv-smoke/bin/necs-demo --json --top-k 3
-          .venv-smoke/bin/necs-validate \
-            --qrels examples/validation/sample.qrels \
-            --run examples/validation/sample.run \
+          set -euo pipefail
+          mapfile -t wheels < <(find "$GITHUB_WORKSPACE/dist" -maxdepth 1 -type f -name '*.whl' -print)
+          mapfile -t sdists < <(find "$GITHUB_WORKSPACE/dist" -maxdepth 1 -type f -name '*.tar.gz' -print)
+          test "${#wheels[@]}" -eq 1
+          test "${#sdists[@]}" -eq 1
+          sha256sum "${wheels[0]}" "${sdists[0]}"
+
+          smoke_dir="$RUNNER_TEMP/necs-wheel-smoke"
+          python -m venv "$smoke_dir"
+          "$smoke_dir/bin/python" -m pip install --upgrade pip
+          "$smoke_dir/bin/python" -m pip install "${wheels[0]}"
+
+          pushd "$RUNNER_TEMP"
+          "$smoke_dir/bin/python" -I -c \
+            'import necs; assert necs.__version__ == "0.3.1", necs.__version__'
+          "$smoke_dir/bin/python" -m pip check
+          "$smoke_dir/bin/necs-validate" --help
+          "$smoke_dir/bin/necs-demo" --json --top-k 3
+          "$smoke_dir/bin/necs-validate" \
+            --qrels "$GITHUB_WORKSPACE/examples/validation/sample.qrels" \
+            --run "$GITHUB_WORKSPACE/examples/validation/sample.run" \
             --expected-task task1_ranking
+          if "$smoke_dir/bin/necs-validate" \
+            --qrels "$GITHUB_WORKSPACE/examples/validation/sample.qrels" \
+            --run "$GITHUB_WORKSPACE/examples/validation/sample.run" \
+            --expected-task task2_classification; then
+            echo "Expected mismatched task metadata to fail." >&2
+            exit 1
+          fi
+          popd
 
   action-smoke:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Set up Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.11"
+
+      - name: Create a caller package-name collision
+        shell: bash
+        run: |
+          mkdir -p necs
+          : > necs/__init__.py
+          printf '%s\n' 'raise SystemExit("caller package shadowed the action")' > necs/validate.py
+          printf '%s\n' 'raise SystemExit("caller PYTHONPATH shadowed stdlib json")' > json.py
 
       - name: Run the repository as a local composite action
         uses: ./
+        env:
+          PYTHONPATH: ${{ github.workspace }}
         with:
           qrels: examples/validation/sample.qrels
           run: examples/validation/sample.run
           expected-task: task1_ranking
+
+      - name: Reject an invalid boolean input
+        id: invalid-boolean
+        continue-on-error: true
+        uses: ./
+        with:
+          qrels: examples/validation/sample.qrels
+          run: examples/validation/sample.run
+          strict-ranks: "yes"
+
+      - name: Reject a missing required input
+        id: missing-input
+        continue-on-error: true
+        uses: ./
+        with:
+          qrels: ""
+          run: examples/validation/sample.run
+
+      - name: Verify negative action contracts
+        if: always()
+        shell: bash
+        env:
+          INVALID_BOOLEAN_OUTCOME: ${{ steps.invalid-boolean.outcome }}
+          MISSING_INPUT_OUTCOME: ${{ steps.missing-input.outcome }}
+        run: |
+          test "$INVALID_BOOLEAN_OUTCOME" = failure
+          test "$MISSING_INPUT_OUTCOME" = failure

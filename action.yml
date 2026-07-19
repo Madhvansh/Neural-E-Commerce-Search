@@ -40,6 +40,48 @@ runs:
         NECS_REQUIRE_JUDGED: ${{ inputs.require-judged }}
         NECS_STRICT_RANKS: ${{ inputs.strict-ranks }}
       run: |
+        set -euo pipefail
+
+        require_value() {
+          local input_name="$1"
+          local value="$2"
+          if [[ -z "$value" ]]; then
+            echo "::error title=Missing required input::${input_name} must name a readable file."
+            exit 2
+          fi
+        }
+
+        require_boolean() {
+          local input_name="$1"
+          local value="$2"
+          case "$value" in
+            true|false) ;;
+            *)
+              echo "::error title=Invalid action input::${input_name} must be 'true' or 'false'."
+              exit 2
+              ;;
+          esac
+        }
+
+        require_value qrels "$NECS_QRELS"
+        require_value run "$NECS_RUN"
+        require_boolean require-query-coverage "$NECS_REQUIRE_COVERAGE"
+        require_boolean require-judged "$NECS_REQUIRE_JUDGED"
+        require_boolean strict-ranks "$NECS_STRICT_RANKS"
+
+        python_command=""
+        for candidate in python python3; do
+          if command -v "$candidate" >/dev/null 2>&1 \
+            && "$candidate" -I -c 'import sys; raise SystemExit(sys.version_info < (3, 9))'; then
+            python_command="$candidate"
+            break
+          fi
+        done
+        if [[ -z "$python_command" ]]; then
+          echo "::error title=Python 3.9+ required::Install Python 3.9 or newer before this action."
+          exit 2
+        fi
+
         args=(--qrels "$NECS_QRELS" --run "$NECS_RUN")
         if [[ -n "$NECS_EXPECTED_TASK" ]]; then
           args+=(--expected-task "$NECS_EXPECTED_TASK")
@@ -53,4 +95,4 @@ runs:
         if [[ "$NECS_STRICT_RANKS" == "true" ]]; then
           args+=(--strict-ranks)
         fi
-        PYTHONPATH="$GITHUB_ACTION_PATH/src" python -m necs.validate "${args[@]}"
+        "$python_command" -I "$GITHUB_ACTION_PATH/src/necs/validate.py" "${args[@]}"

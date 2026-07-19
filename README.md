@@ -10,11 +10,13 @@ reference for Amazon ESCI.**
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 <p>
+  <a href="#validate-retrieval-evidence-in-ci"><strong>Validate a TREC run in CI</strong></a>
+  &middot;
   <a href="https://madhvansh.github.io/Neural-E-Commerce-Search/lab.html?q=wireless%20mouse%20for%20gaming"><strong>▶ Try a live query</strong></a>
   &middot;
   <a href="docs/FORK_THE_LAB.md"><strong>Remix your catalogue</strong></a>
   &middot;
-  <a href="https://github.com/Madhvansh/Neural-E-Commerce-Search/releases/tag/v0.3.0"><strong>Install v0.3.0</strong></a>
+  <a href="https://github.com/Madhvansh/Neural-E-Commerce-Search/releases/tag/v0.3.1"><strong>Install v0.3.1</strong></a>
   &middot;
   <a href="https://github.com/Madhvansh/Neural-E-Commerce-Search/issues/new?template=demo_feedback.yml">Report one result</a>
 </p>
@@ -75,7 +77,7 @@ The bundled demo needs only Python. It uses a tiny synthetic catalogue and
 transparent heuristics, so it works offline without downloading data or models:
 
 ```bash
-python -m pip install "https://github.com/Madhvansh/Neural-E-Commerce-Search/releases/download/v0.3.0/neural_ecommerce_search_madhvansh-0.3.0-py3-none-any.whl"
+python -m pip install "https://github.com/Madhvansh/Neural-E-Commerce-Search/releases/download/v0.3.1/neural_ecommerce_search_madhvansh-0.3.1-py3-none-any.whl"
 necs-demo --query "wireless gaming mouse" --top-k 6
 ```
 
@@ -102,9 +104,11 @@ output or `--catalog path/to/catalog.json` with the documented sample schema.
 
 ## Validate retrieval evidence in CI
 
-The v0.3.0 release also ships a standalone TREC-style structural preflight. It
-fails on malformed values and duplicate query/document pairs, reports query
-coverage, advisory-rank, and unjudged-document diagnostics, and checks optional
+`necs-validate` first shipped in v0.3.0; v0.3.1 hardens the reusable Action
+wrapper without changing validation semantics. The standalone TREC-style
+structural preflight fails on malformed values and duplicate query/document
+pairs, reports query coverage, advisory-rank, and unjudged-document diagnostics,
+and checks optional
 task headers before a metric script can silently produce a misleading aggregate.
 
 ```bash
@@ -114,14 +118,44 @@ necs-validate \
   --expected-task task1_ranking
 ```
 
-Use it directly from another repository's workflow:
+Copy this minimal-permission workflow into another repository:
 
 ```yaml
-- uses: Madhvansh/Neural-E-Commerce-Search@v0.3.0
-  with:
-    qrels: evaluation/qrels.txt
-    run: evaluation/run.txt
+name: Validate retrieval evidence
+on: [push, pull_request]
+
+permissions:
+  contents: read
+
+jobs:
+  validate-run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: "3.11"
+      - uses: Madhvansh/Neural-E-Commerce-Search@81e73c9ed4f3b0ad45b63204b20d82eba308ecc6 # v0.3.1 action code
+        with:
+          qrels: evaluation/qrels.txt
+          run: evaluation/run.txt
 ```
+
+The full hardened action commit SHA above is the strongest immutable pin.
+Replace it with `v0.3.1` if your update policy deliberately follows the
+readable release tag.
+The action needs Bash and Python 3.9 or newer, operates on the two checked-out
+evaluation files, and neither requests a token nor installs packages or model
+assets.
+
+| Input | Required | Default | Effect |
+|---|---:|---:|---|
+| `qrels` | yes | — | Path to the TREC-style qrels file |
+| `run` | yes | — | Path to the TREC-style run file |
+| `expected-task` | no | empty | Requires matching `# task: ...` headers |
+| `require-query-coverage` | no | `false` | Promotes query-set differences to errors |
+| `require-judged` | no | `false` | Promotes unjudged run documents to errors |
+| `strict-ranks` | no | `false` | Promotes advisory rank anomalies to errors |
 
 See [the validator guide](docs/validation.md) for formats, JSON output, strictness
 flags, and the exact evidence boundary. Public downstream uses and caught

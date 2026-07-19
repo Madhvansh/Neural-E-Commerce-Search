@@ -76,12 +76,18 @@ query_id Q0 document_id rank score run_tag
 name: Validate retrieval evidence
 on: [push, pull_request]
 
+permissions:
+  contents: read
+
 jobs:
   validate-run:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: Madhvansh/Neural-E-Commerce-Search@v0.3.0
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: "3.11"
+      - uses: Madhvansh/Neural-E-Commerce-Search@81e73c9ed4f3b0ad45b63204b20d82eba308ecc6 # v0.3.1 action code
         with:
           qrels: evaluation/qrels.txt
           run: evaluation/run.txt
@@ -92,8 +98,17 @@ jobs:
           # strict-ranks: "true"
 ```
 
-The action uses the runner's Python installation and the validator bundled at
-the tagged revision. It does not install the project or download model assets.
+The full hardened action commit SHA is the strongest immutable pin. Replace it
+with `v0.3.1` only if your update policy deliberately follows the readable
+release tag. The action requires Bash and Python 3.9 or newer; the example
+provisions Python explicitly. It runs the validator bundled with the referenced
+revision in Python isolated mode, uses no token or secrets, and does not install
+the project or download model assets.
+
+The two paths are required. `expected-task` defaults to empty, while
+`require-query-coverage`, `require-judged`, and `strict-ranks` each default to
+`"false"`. Pass boolean values as the exact quoted strings `"true"` or
+`"false"`.
 
 If you adopt it in a public repository, share the workflow or any failure it
 caught through the [validator compatibility report](https://github.com/Madhvansh/Neural-E-Commerce-Search/issues/new?template=validator_report.yml).

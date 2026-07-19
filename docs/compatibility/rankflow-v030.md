@@ -17,7 +17,10 @@ or endorsement by that project.
 - adapter:
   [`src/rankflow/adapters/trec.py`](https://github.com/izikeros/rankflow/blob/889778fd030fd4e1d1a370a1b2a465ad8d11c480/src/rankflow/adapters/trec.py),
   Git blob `6d0b6a4846e9bf7ff06177c661eefb9c4bdb443b`
-- fixture SHA-256: `16f1648c8f8717b467a54921e4d55aed2a89039b95510363e7c20b24f775aae8`
+- raw fixture SHA-256 (Git blob bytes with LF line endings):
+  `f5293313ebb9630b133acb52624c5aca5bce80936fc21a2e21a6c65011448ff5`
+- Windows checkout SHA-256 (CRLF line endings used for this trial):
+  `16f1648c8f8717b467a54921e4d55aed2a89039b95510363e7c20b24f775aae8`
 
 A standard-library AST check extracted and byte-verified the upstream BM25,
 reranker, and qrels fixture strings.

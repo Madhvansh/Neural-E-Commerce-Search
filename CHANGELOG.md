@@ -4,6 +4,34 @@ All notable project changes should be recorded here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and releases follow
 [Semantic Versioning](https://semver.org/).
 
+## [0.3.1] - 2026-07-19
+
+### Security
+
+- Execute the Action's bundled validator by its absolute file path so a caller
+  checkout cannot shadow it with a top-level `necs` package.
+
+### Added
+
+- Regression coverage for caller-package shadowing, empty required inputs,
+  invalid boolean inputs, and the Python 3.9+ runtime contract.
+- A hosted-runner Action smoke matrix covering Linux, macOS, and Windows.
+- A release-asset workflow that downloads a named release's wheel, source
+  distribution, and SHA-256 manifest; requires the manifest to cover exactly
+  both archives; and installs and exercises them in separate clean environments
+  outside the checkout.
+
+### Changed
+
+- Detect either `python` or `python3` at version 3.9 or newer and reject empty
+  required inputs or non-boolean strictness values before validation.
+- Make the package smoke job install and test the uniquely selected built wheel
+  from outside the source tree.
+- Label compatibility-fixture SHA-256 values by their actual LF raw-byte and
+  CRLF checkout encodings.
+
+The TREC validation semantics are unchanged from v0.3.0.
+
 ## [0.3.0] - 2026-07-19
 
 ### Added
