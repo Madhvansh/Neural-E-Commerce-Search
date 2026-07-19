@@ -97,3 +97,16 @@ the tagged revision. It does not install the project or download model assets.
 
 If you adopt it in a public repository, share the workflow or any failure it
 caught through the [validator compatibility report](https://github.com/Madhvansh/Neural-E-Commerce-Search/issues/new?template=validator_report.yml).
+
+## Published compatibility evidence
+
+- [`neural-search` fixture trial](compatibility/neural-search-v030.md) — an
+  exact public qrels/run pair at a pinned upstream commit passes the default
+  contract with one unjudged-document warning; `--require-judged` promotes the
+  same finding to an error.
+- [Maintainer-owned reference consumer](https://github.com/Madhvansh/necs-validator-example/actions/workflows/validate.yml) — proves that the pinned
+  `v0.3.0` Action runs from another repository's default branch. It is not
+  counted as independent adoption.
+
+Each report distinguishes maintainer-run compatibility testing from downstream
+adoption or upstream endorsement.

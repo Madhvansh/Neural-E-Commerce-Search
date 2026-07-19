@@ -1,0 +1,28 @@
+{
+  "counts": {
+    "errors": 0,
+    "qrels_judgements": 7,
+    "qrels_queries": 3,
+    "run_entries": 8,
+    "run_queries": 3,
+    "warnings": 1
+  },
+  "issues": [
+    {
+      "code": "unjudged_document",
+      "document_id": "dandi:000010",
+      "file": null,
+      "line": null,
+      "message": "Run document has no judgement for this query",
+      "query_id": "q_smoke_001",
+      "severity": "warning"
+    }
+  ],
+  "metadata": {
+    "qrels": {},
+    "run": {}
+  },
+  "ok": true,
+  "qrels_path": "converted.qrels",
+  "run_path": "converted.run"
+}
