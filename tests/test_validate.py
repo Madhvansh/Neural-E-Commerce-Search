@@ -160,3 +160,71 @@ def test_cli_require_judged_turns_warning_into_failure(tmp_path, capsys):
 
     assert exit_code == 1
     assert "unjudged_document" in output
+
+
+def test_float_relevance_grades_fail_by_default(tmp_path):
+    # A non-integer qrels grade (e.g. 1.5) is a structural error by default.
+    # Integer-only evaluators silently truncate such a grade (1.5 -> 1),
+    # quietly changing the judgement; see docs/validation.md for the failure
+    # mode. "2" carries an integer value and must not be flagged.
+    qrels = _write(tmp_path / "qrels.txt", "1 0 d1 1.5\n1 0 d2 1e-1\n2 0 d3 2\n")
+    run = _write(
+        tmp_path / "run.txt",
+        "1 Q0 d1 1 1.2 necs\n1 Q0 d2 2 0.4 necs\n2 Q0 d3 1 0.7 necs\n",
+    )
+
+    report = validate_files(qrels, run)
+    non_integer = [issue for issue in report.errors if issue.code == "non_integer_relevance"]
+
+    assert not report.ok
+    assert {issue.line for issue in non_integer} == {1, 2}
+    assert {issue.document_id for issue in non_integer} == {"d1", "d2"}
+
+
+def test_float_relevance_grades_integer_valued_floats_pass(tmp_path):
+    # "2.0" and "3" round-trip to an integer, so they are not truncation
+    # hazards and must never be reported; only genuinely non-integer grades are.
+    qrels = _write(tmp_path / "qrels.txt", "1 0 d1 2.0\n1 0 d2 3\n2 0 d3 0\n")
+    run = _write(
+        tmp_path / "run.txt",
+        "1 Q0 d1 1 1.2 necs\n1 Q0 d2 2 0.4 necs\n2 Q0 d3 1 0.7 necs\n",
+    )
+
+    report = validate_files(qrels, run)
+
+    assert report.ok
+    assert not any(issue.code == "non_integer_relevance" for issue in report.issues)
+
+
+def test_float_relevance_grades_allowed_as_warning(tmp_path):
+    # The --allow-float-grades escape hatch keeps deliberate graded-gain
+    # workflows passing while still surfacing the same silent-truncation risk
+    # (a non-integer grade dropped to its floor by integer-only evaluators) as
+    # an advisory warning rather than a hard error.
+    qrels = _write(tmp_path / "qrels.txt", "1 0 d1 1.5\n1 0 d2 1e-1\n")
+    run = _write(tmp_path / "run.txt", "1 Q0 d1 1 1.2 necs\n1 Q0 d2 2 0.4 necs\n")
+
+    report = validate_files(qrels, run, allow_float_grades=True)
+    warning_codes = [issue.code for issue in report.warnings]
+
+    assert report.ok
+    assert warning_codes == ["non_integer_relevance", "non_integer_relevance"]
+    assert not any(issue.code == "non_integer_relevance" for issue in report.errors)
+
+
+def test_float_relevance_grades_cli_flag_flips_exit_code(tmp_path, capsys):
+    # The same file fails closed by default and passes under the escape hatch.
+    # Default failure guards downstream evaluators that would truncate the grade
+    # to an integer without warning.
+    qrels = _write(tmp_path / "qrels.txt", "1 0 d1 1.5\n")
+    run = _write(tmp_path / "run.txt", "1 Q0 d1 1 1.0 necs\n")
+
+    default_exit = run_cli(["--qrels", str(qrels), "--run", str(run)])
+    default_out = capsys.readouterr().out
+    allowed_exit = run_cli(
+        ["--qrels", str(qrels), "--run", str(run), "--allow-float-grades"]
+    )
+
+    assert default_exit == 1
+    assert "non_integer_relevance" in default_out
+    assert allowed_exit == 0
