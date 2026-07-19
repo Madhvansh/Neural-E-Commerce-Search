@@ -12,6 +12,8 @@ reference for Amazon ESCI.**
 <p>
   <a href="#validate-retrieval-evidence-in-ci"><strong>Validate a TREC run in CI</strong></a>
   &middot;
+  <a href="https://madhvansh.github.io/Neural-E-Commerce-Search/validate.html"><strong>Validate a run in your browser</strong></a>
+  &middot;
   <a href="https://madhvansh.github.io/Neural-E-Commerce-Search/lab.html?q=wireless%20mouse%20for%20gaming"><strong>▶ Try a live query</strong></a>
   &middot;
   <a href="docs/FORK_THE_LAB.md"><strong>Remix your catalogue</strong></a>
@@ -110,6 +112,12 @@ structural preflight fails on malformed values and duplicate query/document
 pairs, reports query coverage, advisory-rank, and unjudged-document diagnostics,
 and checks optional
 task headers before a metric script can silently produce a misleading aggregate.
+
+> **Prefer to click, not install?** Drop your qrels and run files into the
+> [in-browser validator](https://madhvansh.github.io/Neural-E-Commerce-Search/validate.html).
+> The exact v0.3.1 release wheel runs client-side through Pyodide, so your files
+> never leave your machine — no upload, no server, no environment to set up.
+> Bundled valid and broken examples make the result obvious in seconds.
 
 ```bash
 necs-validate \
@@ -308,6 +316,7 @@ results/           schema and instructions for future result bundles
 | [Deployment](docs/deployment.md) | API, Docker, and operational caveats |
 | [Browser lab](https://madhvansh.github.io/Neural-E-Commerce-Search/lab.html) | No-login client-side neural retrieval |
 | [Run validator](docs/validation.md) | Reusable CLI and GitHub Action for TREC evaluation integrity |
+| [Browser validator](https://madhvansh.github.io/Neural-E-Commerce-Search/validate.html) | Drop-in TREC qrels/run validation running the v0.3.1 wheel client-side |
 | [TREC advisory-rank article](docs/articles/trec-rank-advisory.md) | Why the rank column is advisory and how three preflight defaults were chosen |
 | [Compatibility evidence](docs/compatibility/matrix-v030.md) | Pinned cross-ecosystem trials with machine-readable output |
 | [Releasing](docs/releasing.md) | Package-name and release safety checks |

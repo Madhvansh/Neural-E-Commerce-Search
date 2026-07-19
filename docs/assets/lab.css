@@ -218,6 +218,44 @@ h2 {
   font-size: 0.78rem;
 }
 
+.lab-promo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 22px;
+  padding: 10px 16px;
+  border: 1px solid rgba(88, 230, 217, 0.32);
+  border-radius: 999px;
+  background: rgba(88, 230, 217, 0.06);
+  color: var(--text);
+  font-size: 0.86rem;
+  text-decoration: none;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease;
+}
+
+.lab-promo:hover,
+.lab-promo:focus-visible {
+  border-color: rgba(88, 230, 217, 0.6);
+  background: rgba(88, 230, 217, 0.1);
+}
+
+.lab-promo-badge {
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--cyan);
+  color: #041519;
+  font-size: 0.68rem;
+  font-weight: 750;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.lab-promo-arrow {
+  color: var(--cyan);
+}
+
 .search-panel {
   padding: 30px;
   border: 1px solid var(--line);

@@ -18,6 +18,17 @@ This is not byte-for-byte NIST input certification or benchmark certification.
 A passing report does not establish dataset provenance, correct gains, model
 quality, or a sound experimental design.
 
+## Validate in your browser
+
+Prefer not to install anything? The
+[in-browser validator](https://madhvansh.github.io/Neural-E-Commerce-Search/validate.html)
+runs the exact v0.3.1 release wheel client-side through
+[Pyodide](https://pyodide.org/): drop a qrels and a run file (or load a bundled
+valid/broken example), optionally toggle the strict-mode flags, and read the same
+pass/warn/fail report the CLI produces — then copy it as Markdown to share. Files
+are read in the page and never uploaded; there is no server, tracking, or
+analytics. The CLI below remains the canonical entry point for CI.
+
 ## Run the CLI
 
 From a checkout:
