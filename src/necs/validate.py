@@ -154,13 +154,27 @@ def _data_lines(
     return rows, metadata
 
 
-def parse_qrels(path: str | Path, issues: list[ValidationIssue] | None = None) -> ParsedQrels:
-    """Parse ``query_id iteration document_id relevance`` rows."""
+def parse_qrels(
+    path: str | Path,
+    issues: list[ValidationIssue] | None = None,
+    *,
+    allow_float_grades: bool = False,
+) -> ParsedQrels:
+    """Parse ``query_id iteration document_id relevance`` rows.
+
+    Relevance grades are expected to be integers, matching the TREC qrels
+    contract that integer-only evaluators assume. A non-integer grade such as
+    ``1.5`` is reported as a structural error by default: integer-only
+    evaluators truncate it (``1.5`` becomes ``1``) without warning, silently
+    altering the judgement. Pass ``allow_float_grades=True`` to demote that
+    finding to a warning for deliberate graded-gain workflows.
+    """
 
     issue_list = issues if issues is not None else []
     qrels_path = Path(path)
     rows, metadata = _data_lines(qrels_path, 4, "qrels", issue_list)
     parsed = ParsedQrels(metadata=metadata)
+    grade_severity = "warning" if allow_float_grades else "error"
 
     for line_number, columns in rows:
         query_id, _iteration, document_id, raw_relevance = columns
@@ -181,6 +195,25 @@ def parse_qrels(path: str | Path, issues: list[ValidationIssue] | None = None) -
                 )
             )
             continue
+
+        if not relevance.is_integer():
+            # Integer-only evaluators silently truncate a non-integer grade
+            # (1.5 -> 1), changing the judgement without any warning. Surface it
+            # here so the corruption fails the preflight before evaluation.
+            issue_list.append(
+                ValidationIssue(
+                    grade_severity,
+                    "non_integer_relevance",
+                    (
+                        f"Relevance grade must be an integer, found {raw_relevance!r}; "
+                        "integer-only evaluators silently truncate non-integer grades"
+                    ),
+                    file=str(qrels_path),
+                    line=line_number,
+                    query_id=query_id,
+                    document_id=document_id,
+                )
+            )
 
         query_judgements = parsed.judgements.setdefault(query_id, {})
         if document_id in query_judgements:
@@ -446,12 +479,13 @@ def validate_files(
     require_query_coverage: bool = False,
     require_judged: bool = False,
     strict_ranks: bool = False,
+    allow_float_grades: bool = False,
     expected_task: str | None = None,
 ) -> ValidationReport:
     """Validate two TREC-style files and return a complete report."""
 
     issues: list[ValidationIssue] = []
-    qrels = parse_qrels(qrels_path, issues)
+    qrels = parse_qrels(qrels_path, issues, allow_float_grades=allow_float_grades)
     run = parse_run(run_path, issues)
     _add_coverage_issues(
         qrels,
@@ -524,6 +558,14 @@ def _build_parser() -> argparse.ArgumentParser:
         help="fail on advisory rank-column anomalies (default: warning)",
     )
     parser.add_argument(
+        "--allow-float-grades",
+        action="store_true",
+        help=(
+            "demote non-integer qrels relevance grades to a warning "
+            "(default: error; integer-only evaluators truncate them)"
+        ),
+    )
+    parser.add_argument(
         "--expected-task",
         help="require both files to declare this value in '# task: ...' headers",
     )
@@ -544,6 +586,7 @@ def run_cli(argv: Iterable[str] | None = None) -> int:
         require_query_coverage=args.require_query_coverage,
         require_judged=args.require_judged,
         strict_ranks=args.strict_ranks,
+        allow_float_grades=args.allow_float_grades,
         expected_task=args.expected_task,
     )
     if args.format == "json":

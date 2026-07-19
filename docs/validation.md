@@ -7,6 +7,7 @@ metric script.
 It detects or reports:
 
 - malformed rows and non-finite relevance or score values;
+- non-integer relevance grades that integer-only evaluators silently truncate;
 - duplicate judgements or returned documents;
 - advisory rank columns with duplicate, gapped, unusually based, or out-of-order values;
 - queries present on only one side of the evaluation;
@@ -53,9 +54,12 @@ The defaults follow common IR tooling instead of enforcing one exporter:
   a stricter matched-set contract.
 - Unjudged returned documents are common with pooled qrels, so they warn by
   default; `--require-judged` is appropriate for fully judged candidate sets.
-- For broader graded-retrieval compatibility, relevance values may be any
-  finite numeric gain. [NIST `trec_eval` uses a narrower integer qrels contract](https://github.com/usnistgov/trec_eval/blob/main/get_qrels.c),
-  so this preflight intentionally does not claim byte-for-byte parser parity.
+- Relevance grades are integers by default, matching the qrels contract
+  [NIST `trec_eval` and other integer-only evaluators assume](https://github.com/usnistgov/trec_eval/blob/main/get_qrels.c).
+  A non-integer grade is a structural error; `--allow-float-grades` demotes it
+  to a warning for deliberate graded-gain workflows. See
+  [Float relevance grades](#float-relevance-grades) below. This preflight still
+  does not claim byte-for-byte parser parity.
 
 The accepted whitespace-separated formats are:
 
@@ -69,6 +73,33 @@ query_id iteration document_id relevance
 # run
 query_id Q0 document_id rank score run_tag
 ```
+
+## Float relevance grades
+
+TREC-style qrels grade relevance with integers. Integer-only evaluators —
+including NIST `trec_eval`, respected reference software — parse the grade as an
+integer, so a fractional grade is silently truncated toward zero: a `1.5`
+judgement is scored as `1` and a `0.3` judgement as `0`. The value changes with
+no error or warning, so a corrupted export (for example a float column written
+straight from a dataframe) can quietly shift every metric.
+
+As defense in depth before evaluators that assume integer grades, this preflight
+treats a non-integer qrels grade as a structural error by default. A grade whose
+value is an integer is accepted regardless of how it is written, so `2` and
+`2.0` both pass; only a genuinely fractional value such as `1.5` fails.
+
+```text
+$ necs-validate --qrels qrels.txt --run run.txt
+NECS run validation: FAIL
+qrels=1 queries/1 judgements; run=1 queries/1 entries
+errors=1 warnings=0
+[ERROR] non_integer_relevance (qrels.txt, line 1): query=1 document=d1 Relevance grade must be an integer, found '1.5'; integer-only evaluators silently truncate non-integer grades
+```
+
+Some graded-relevance workflows use fractional gains deliberately — NECS's own
+NDCG uses ESCI gains of `1.0`, `0.1`, `0.01`, and `0.0`. Pass
+`--allow-float-grades` to keep those runs valid while still surfacing each
+fractional grade as an advisory warning instead of an error.
 
 ## Use the GitHub Action
 
