@@ -18,6 +18,10 @@ This is not byte-for-byte NIST input certification or benchmark certification.
 A passing report does not establish dataset provenance, correct gains, model
 quality, or a sound experimental design.
 
+Found a run this preflight rejects but `trec_eval` accepts, or a corruption it
+misses? That is the [False-Positive Hunt](https://github.com/Madhvansh/Neural-E-Commerce-Search/issues/18) —
+reproducible counterexamples get credited.
+
 ## Validate in your browser
 
 Prefer not to install anything? The
