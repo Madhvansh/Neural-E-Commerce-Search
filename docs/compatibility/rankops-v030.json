@@ -1,0 +1,21 @@
+{
+  "artifact": "examples/trec_eval.rs QRELS and RUN constants",
+  "trials": [
+    {
+      "id": "default",
+      "errors": 0,
+      "exit_code": 0,
+      "ok": true,
+      "warnings": 0
+    },
+    {
+      "id": "full-strict",
+      "errors": 0,
+      "exit_code": 0,
+      "ok": true,
+      "warnings": 0
+    }
+  ],
+  "upstream_commit": "d2c7140e3dd46e940c2dd773d08a1c0dbe616b77",
+  "validator_version": "0.3.0"
+}
