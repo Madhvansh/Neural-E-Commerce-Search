@@ -23,6 +23,8 @@ reference for Amazon ESCI.**
   <a href="https://github.com/Madhvansh/Neural-E-Commerce-Search/issues/new?template=demo_feedback.yml">Report one result</a>
 </p>
 
+**[The False-Positive Hunt](https://github.com/Madhvansh/Neural-E-Commerce-Search/issues/18)**: break the validator, get credited.
+
 [![Open the live neural-search lab](docs/assets/social-preview.png)](https://madhvansh.github.io/Neural-E-Commerce-Search/lab.html)
 
 <sub>Illustrative project preview. Run the live query above for measured results
