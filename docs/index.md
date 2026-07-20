@@ -59,6 +59,7 @@ metrics are withdrawn pending a corrected rerun. Read [Experiments](experiments.
 - [Deployment](deployment.md): serving and operational caveats
 - [Browser lab](lab.html): client-side MiniLM retrieval demo
 - [Browser validator](validate.html): drop-in TREC run validation via Pyodide
+- [trec_eval format errors](trec-eval-format-errors.md): common TREC qrels/run format mistakes and how they are reported
 - [Releasing](releasing.md): package and release safety checks
 
 ## Links
