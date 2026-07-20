@@ -45,6 +45,9 @@ from the current browser, model revision, and catalogue.</sub>
 If the lab is useful, **[star the repository](https://github.com/Madhvansh/Neural-E-Commerce-Search)**
 to save it and follow the reproducibility work, or
 **[remix it with your own catalogue](docs/FORK_THE_LAB.md)** in about five minutes.
+Published remixes get listed in the
+[Remix Gallery](docs/FORK_THE_LAB.md#remix-gallery); the first ten to share a
+working link are featured.
 
 ### Independent verification sprint
 
