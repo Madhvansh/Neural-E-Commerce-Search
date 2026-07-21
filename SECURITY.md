@@ -11,9 +11,9 @@ Please use GitHub's private vulnerability-reporting flow from the repository's
 request.
 
 Include the affected version or commit, impact, reproduction steps, and any
-suggested mitigation. This volunteer-maintained project does not currently
-promise a response-time SLA; the maintainer will acknowledge reports as
-capacity permits.
+suggested mitigation. The maintainer will send an initial acknowledgement of
+your report within 14 days. This is a volunteer-maintained project, so the
+timeline for investigating and delivering a fix is handled as capacity permits.
 
 If private vulnerability reporting is not available, contact the maintainer
 through the private contact method listed on the maintainer's GitHub profile.
