@@ -1,0 +1,24 @@
+{
+  "source": "https://github.com/amazon-science/esci-data",
+  "revision": "7916cdf6ab75a462e77f20ab40428a10923998d5",
+  "subdir": "shopping_queries_dataset",
+  "locale": "us",
+  "task": "task1_ranking",
+  "version_column": "small_version",
+  "split": "test",
+  "note": "Frozen inputs for the Task 1 ranking BM25 baseline. Step 1 of the docs/experiments.md rerun plan (Freeze the inputs). The parquet files are Git-LFS objects; the sha256 values below are the LFS content hashes (verifiable with `sha256sum` after `git lfs pull` at the pinned revision).",
+  "files": [
+    {
+      "name": "shopping_queries_dataset_examples.parquet",
+      "sha256": "4a735b693b4a424a6fc67f5be6e4c811495c488bbf66d02a602d308b2744263a",
+      "size": 51286808,
+      "lfs": true
+    },
+    {
+      "name": "shopping_queries_dataset_products.parquet",
+      "sha256": "25124442d064d64b26f74082d6fa09438d679efc0c183cf28d19064a2b65a265",
+      "size": 1108857465,
+      "lfs": true
+    }
+  ]
+}
