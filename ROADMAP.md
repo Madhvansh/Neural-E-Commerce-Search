@@ -13,6 +13,12 @@ Items move to complete only when the linked code, test, or artifact is public.
 - [ ] Publish the exact ESCI source revision and file checksums.
 - [ ] Add an environment lock for each supported training profile.
 - [ ] Re-run BM25 from a clean checkout and publish its raw run file.
+- [ ] Build release assets inside GitHub Actions and attach build provenance with
+      [`actions/attest-build-provenance`](https://github.com/actions/attest-build-provenance)
+      so future releases ship verifiable provenance. The v0.3.1 wheel and sdist
+      were built outside Actions; they are verified instead by the published
+      SHA-256 manifest and the post-publication asset-verification workflow, and
+      no attestation is retrofitted to those existing assets.
 
 ## 2. Reproduce learned-system results
 

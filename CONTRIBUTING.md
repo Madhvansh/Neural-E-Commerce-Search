@@ -12,6 +12,9 @@ the implementation easier to reproduce, evaluate, extend, or use.
 4. Add or update tests and documentation where behavior changes.
 5. Report the exact commands you ran and any skipped tests.
 
+**Test policy:** major new functionality must ship with tests, and `pytest` must
+pass locally before a pull request is opened.
+
 Good contributions include reproducible benchmark artifacts, bug fixes, dataset
 or model adapters, evaluation improvements, small demo improvements, and precise
 documentation corrections. Generated bulk changes, trivial activity intended to

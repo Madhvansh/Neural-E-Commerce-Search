@@ -309,6 +309,14 @@ docs/              architecture, data, training, evidence, and deployment
 results/           schema and instructions for future result bundles
 ```
 
+## Evidence index
+
+Every public claim in this repository maps to an artifact you can open and check
+yourself. [EVIDENCE.md](EVIDENCE.md) is a "verify in 90 seconds" table pairing each
+claim — the v0.3.1 checksummed assets, the green post-publication verify run, the
+13-artifact TREC field report, the compatibility trials, CI, and the browser
+tools — with a live public URL.
+
 ## Documentation
 
 | Document | Purpose |
