@@ -4,6 +4,18 @@ All notable project changes should be recorded here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and releases follow
 [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- A `trec_eval` compatibility harness under `harness/trec_eval_compat/`: a
+  frozen, hash-pinned copy of NIST `trec_eval`'s shipped qrels/run test files
+  and a standard-library differential runner that replays the released
+  `necs-validate` structural preflight over them and regenerates raw outputs
+  and a summary table. The runner takes a `--validator` command so the same
+  fixtures can later be pointed at a second `trec_eval` implementation. Scope
+  is a structural preflight only, not a scoring-correctness oracle.
+
 ## [0.3.1] - 2026-07-19
 
 ### Security

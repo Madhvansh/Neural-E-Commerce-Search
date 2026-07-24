@@ -1,0 +1,6 @@
+# Freeze the compatibility fixtures and the captured validator outputs as-is so
+# their raw bytes -- and therefore their SHA-256 hashes -- are identical on
+# every platform, independent of the repository's core.autocrlf / core.eol
+# settings. These files are checked in with LF endings and must stay that way.
+fixtures/** -text
+results/** -text
