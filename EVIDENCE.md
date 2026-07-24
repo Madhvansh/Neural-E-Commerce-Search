@@ -34,6 +34,12 @@ reachable before publication.
 | Run validator | `necs-validate` and the root GitHub Action preflight TREC-style qrels/run files without model dependencies | Evaluation files can be checked for structural errors and standards-aware coverage/rank diagnostics before metrics are computed |
 | Learned ESCI results | No current public benchmark claim | A corrected clean training run and complete result bundle are still required |
 
+**Community metrics.** The live stargazer, fork, and contributor lists are
+authoritative for this repository. As of 2026-07-24 the live stargazer list shows
+the maintainer's own account only, while GitHub's cached star-count field
+transiently displays a higher number; the discrepancy has been reported to GitHub
+Support (July 2026). No claim in this project relies on the count field.
+
 The browser lab is intentionally not described as an ESCI benchmark or as the
 project's trained two-stage pipeline. It uses a general-purpose MiniLM model,
 runs entirely in the visitor's browser, and displays cosine similarity over a
