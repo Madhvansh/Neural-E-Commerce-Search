@@ -8,6 +8,7 @@ reference for Amazon ESCI.**
 [![Latest release](https://img.shields.io/github/v/release/Madhvansh/Neural-E-Commerce-Search)](https://github.com/Madhvansh/Neural-E-Commerce-Search/releases)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/13775/badge)](https://www.bestpractices.dev/projects/13775)
 
 <p>
   <a href="#validate-retrieval-evidence-in-ci"><strong>Validate a TREC run in CI</strong></a>
